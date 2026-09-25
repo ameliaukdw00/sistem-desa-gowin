@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rekapitulasi Data Desa — Desa Gondang Winangun</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Pustaka JavaScript Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .detail-page-container { max-width: 1180px; margin: 40px auto; padding: 0 20px; }
+        
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 35px; }
+        .summary-card { background: #ffffff; border: 1.5px solid var(--line); border-radius: 16px; padding: 25px; text-align: center; box-shadow: 0 10px 30px -15px rgba(18, 35, 63, 0.08); }
+        .summary-card .val { font-family: var(--font-display); font-size: 32px; font-weight: 700; color: var(--navy); margin-bottom: 5px; }
+        .summary-card .lbl { font-size: 13px; color: #525c73; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; }
+
+        .table-box-custom { background: #ffffff; border: 1.5px solid var(--line); border-radius: 18px; padding: 30px; box-shadow: 0 10px 30px -15px rgba(18, 35, 63, 0.08); overflow-x: auto; }
+        table.data-table { width: 100%; border-collapse: collapse; text-align: left; margin-top: 15px; }
+        table.data-table th { background-color: var(--navy); color: #ffffff; padding: 14px 16px; font-size: 14px; font-family: var(--font-display); }
+        table.data-table td { padding: 14px 16px; border-bottom: 1px solid var(--line); font-size: 14px; color: var(--ink); vertical-align: middle; }
+        table.data-table tr:hover { background-color: #f8f9fc; }
+        .btn-link-dusun { color: var(--blue); text-decoration: none; font-weight: 600; }
+        .btn-link-dusun:hover { text-decoration: underline; }
+    </style>
+</head>
+<body style="background-color: #f4f6f9;">
+
+<header>
+    <nav>
+        <a href="index.html" class="logo">
+            <span>GOWIN<small>Data &amp; Profil Desa</small></span>
+        </a>
+        <div class="nav-links">
+            <a href="index.html" style="color: var(--blue); font-weight: 600;">← Kembali ke Beranda</a>
+        </div>
+    </nav>
+</header>
+
+<div class="detail-page-container">
+    <div class="section-head" style="margin-bottom: 30px;">
+        <div id="kategoriLabel" class="eyebrow" style="color: var(--gold); font-weight: 700; margin-bottom: 6px;">KATEGORI: -</div>
+        <h2 id="judulUtama" style="font-family: var(--font-display); font-size: 32px; color: var(--navy); margin-bottom: 8px;">Ringkasan Data</h2>
+        <p id="deskripsiUtama" style="color: #525c73; font-size: 15px;">Rekapitulasi pencatatan data warga per dusun di Desa Gondang Winangun berdasarkan database Supabase.</p>
+    </div>
+
+    <!-- KOTAK RINGKASAN -->
+    <div class="summary-grid" id="summaryGrid">
+        <div class="summary-card"><div class="val" id="stat1">0</div><div class="lbl" id="lbl1">Total Data</div></div>
+        <div class="summary-card"><div class="val" id="stat2">0</div><div class="lbl" id="lbl2">Kategori A</div></div>
+        <div class="summary-card"><div class="val" id="stat3">0</div><div class="lbl" id="lbl3">Kategori B</div></div>
+        <div class="summary-card"><div class="val">9 Dusun</div><div class="lbl">Wilayah Pelaporan</div></div>
+    </div>
+
+    <!-- TABEL REKAPITULASI -->
+    <div class="table-box-custom">
+        <h3 id="tabelJudul" style="font-family: var(--font-display); font-size: 18px; color: var(--navy); margin-bottom: 5px;">Rekap per Dusun</h3>
+        <table class="data-table">
+            <thead>
+                <tr id="tableHeaderRow">
+                    <th style="width: 70px;">No</th>
+                    <th>Nama Dusun</th>
+                    <th>Jumlah Total</th>
+                    <th>Sub Kategori 1</th>
+                    <th>Sub Kategori 2</th>
+                </tr>
+            </thead>
+            <tbody id="tabelRekapBody">
+                <tr><td colspan="5" style="text-align:center; color:#525c73; font-style:italic;">Memuat data secara otomatis dari Supabase...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // Konfigurasi Supabase Anda
+    const SUPABASE_URL = 'https://ktqtxtjjghvpyrlxclwp.supabase.co';
+    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_RXYccBhx7piFKdpWXxpDgg_5ZM24L-m';
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const jenisKategori = (urlParams.get('kat') || 'penduduk').toLowerCase();
+
+    const daftarDusun = [
+        "Gandu", "Carikan", "Klurak", "Gamblok", 
+        "Kejawan", "Pancas", "Kedawung", "Kaligalang", "Karangrejo"
+    ];
+
+    const dataKonfigurasi = {
+        'penduduk': {
+            label: 'KATEGORI: PENDUDUK',
+            judul: 'Ringkasan Data Penduduk & Kepala Keluarga',
+            deskripsi: 'Rekapitulasi jumlah Kepala Keluarga dan warga per dusun di Desa Gondang Winangun (Tersambung ke Supabase).',
+            lbl1: 'Total Kepala Keluarga', lbl2: 'Total Dusun', lbl3: 'Wilayah Aktif',
+            th3: 'Jumlah Kepala Keluarga', th4: 'Keterangan', th5: 'Status Pendataan'
+        },
+        'kelahiran': {
+            label: 'KATEGORI: KELAHIRAN',
+            judul: 'Ringkasan Data Kelahiran Warga',
+            deskripsi: 'Rekapitulasi pencatatan bayi lahir per dusun di Desa Gondang Winangun.',
+            lbl1: 'Total Kelahiran', lbl2: 'Wilayah Dusun', lbl3: 'Status Aktif',
+            th3: 'Jumlah Bayi Lahir', th4: 'Keterangan', th5: 'Status'
+        },
+        'kematian': {
+            label: 'KATEGORI: KEMATIAN',
+            judul: 'Ringkasan Data Kematian Warga',
+            deskripsi: 'Rekapitulasi pencatatan warga wafat per dusun di Desa Gondang Winangun.',
+            lbl1: 'Total Kematian', lbl2: 'Wilayah Dusun', lbl3: 'Status Aktif',
+            th3: 'Jumlah Wafat', th4: 'Keterangan', th5: 'Status'
+        },
+        'kemiskinan': {
+            label: 'KATEGORI: KEMISKINAN',
+            judul: 'Ringkasan Data Kemiskinan (Desil)',
+            deskripsi: 'Klasifikasi tingkat kesejahteraan warga berdasarkan desil per dusun.',
+            lbl1: 'Total Terdata', lbl2: 'Wilayah Dusun', lbl3: 'Status Aktif',
+            th3: 'Total KK Terdata', th4: 'Keterangan', th5: 'Status'
+        },
+        'pendidikan': {
+            label: 'KATEGORI: PENDIDIKAN',
+            judul: 'Ringkasan Data Pendidikan Warga',
+            deskripsi: 'Status pencatatan tingkat pendidikan warga di setiap dusun.',
+            lbl1: 'Total Terdata', lbl2: 'Wilayah Dusun', lbl3: 'Status Aktif',
+            th3: 'Total Terdata', th4: 'Keterangan', th5: 'Status'
+        },
+        'rumah': {
+            label: 'KATEGORI: KEPEMILIKAN RUMAH',
+            judul: 'Ringkasan Data Kepemilikan Rumah',
+            deskripsi: 'Status kondisi tempat tinggal dan kepemilikan rumah warga per dusun.',
+            lbl1: 'Total Rumah', lbl2: 'Wilayah Dusun', lbl3: 'Status Aktif',
+            th3: 'Total Rumah', th4: 'Keterangan', th5: 'Status'
+        },
+        'bantuan': {
+            label: 'KATEGORI: BANTUAN SOSIAL',
+            judul: 'Ringkasan Penerima Bantuan Sosial',
+            deskripsi: 'Rekapitulasi warga penerima program bantuan per dusun.',
+            lbl1: 'Total Penerima', lbl2: 'Wilayah Dusun', lbl3: 'Status Aktif',
+            th3: 'Total Penerima', th4: 'Keterangan', th5: 'Status'
+        }
+    };
+
+    const config = dataKonfigurasi[jenisKategori] || dataKonfigurasi['penduduk'];
+    document.getElementById('kategoriLabel').innerText = config.label;
+    document.getElementById('judulUtama').innerText = config.judul;
+    document.getElementById('deskripsiUtama').innerText = config.deskripsi;
+    document.getElementById('lbl1').innerText = config.lbl1;
+    document.getElementById('lbl2').innerText = config.lbl2;
+    document.getElementById('lbl3').innerText = config.lbl3;
+
+    document.getElementById('tableHeaderRow').innerHTML = `
+        <th style="width: 70px;">No</th>
+        <th>Nama Dusun</th>
+        <th>${config.th3}</th>
+        <th>${config.th4}</th>
+        <th>${config.th5}</th>
+    `;
+
+    async function muatDataRekapSupabase() {
+        // Ambil data langsung dari tabel 'Penduduk' di Supabase
+        let { data: dataWarga, error } = await _supabase.from('Penduduk').select('*');
+        const tbody = document.getElementById('tabelRekapBody');
+        tbody.innerHTML = '';
+
+        if (error || !dataWarga) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#dc3545; font-weight:600;">Gagal terhubung ke database Supabase. Pastikan RLS sudah nonaktif.</td></tr>`;
+            console.error(error);
+            return;
+        }
+
+        let totalSemua = 0;
+
+        daftarDusun.forEach((dusun, idx) => {
+            const noStr = String(idx + 1).padStart(2, '0');
+            
+            // Hitung jumlah KK secara dinamis per dusun yang cocok di Supabase
+            const jumlahKK = dataWarga.filter(w => {
+                const namaVal = w.nama ? String(w.nama).trim() : '-';
+                const dusunVal = w.dusun ? String(w.dusun).trim().toUpperCase() : '';
+                return dusunVal === dusun.toUpperCase() && namaVal !== '-' && namaVal !== '';
+            }).length;
+
+            totalSemua += jumlahKK;
+
+            const tr = document.createElement('tr');
+            if (jenisKategori === 'penduduk') {
+                tr.innerHTML = `
+                    <td>${noStr}</td>
+                    <td><a href="penduduk.html?dusun=${encodeURIComponent(dusun)}" class="btn-link-dusun">Dusun ${dusun}</a></td>
+                    <td><strong>${jumlahKK} KK</strong></td>
+                    <td><span style="color: #525c73;">Kepala Keluarga</span></td>
+                    <td><span style="color: #28a745; font-weight: 600;">● Aktif Terdata</span></td>
+                `;
+            } else {
+                tr.innerHTML = `
+                    <td>${noStr}</td>
+                    <td><a href="penduduk.html?dusun=${encodeURIComponent(dusun)}" class="btn-link-dusun">Dusun ${dusun}</a></td>
+                    <td><strong>${jumlahKK}</strong></td>
+                    <td><span style="color: #525c73;">Pencatatan Desa</span></td>
+                    <td><span style="color: #28a745; font-weight: 600;">● Aktif Terdata</span></td>
+                `;
+            }
+            tbody.appendChild(tr);
+        });
+
+        // Perbarui angka statistik kotak atas secara otomatis
+        document.getElementById('stat1').innerText = totalSemua;
+        document.getElementById('stat2').innerText = '9 Dusun';
+        document.getElementById('stat3').innerText = 'Resmi';
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        muatDataRekapSupabase();
+    });
+</script>
+
+</body>
+</html>

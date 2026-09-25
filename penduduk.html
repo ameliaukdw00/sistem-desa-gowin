@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Penduduk Desa Gondang Winangun</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Pustaka JavaScript Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .detail-container { max-width: 1180px; margin: 40px auto; padding: 0 20px; }
+        .table-box { background: #ffffff; border: 1.5px solid var(--line); border-radius: 18px; padding: 30px; box-shadow: 0 10px 30px -15px rgba(18, 35, 63, 0.08); overflow-x: auto; }
+        
+        .top-action-row { display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; margin-bottom: 25px; }
+        .rt-filter-row { display: flex; gap: 10px; flex-wrap: wrap; }
+        
+        .search-box { padding: 8px 16px; border: 1.5px solid var(--line); border-radius: 8px; font-size: 13px; outline: none; width: 220px; transition: border-color 0.2s; }
+        .search-box:focus { border-color: var(--blue); }
+
+        .print-btn { padding: 8px 16px; background: #28a745; color: #ffffff; border: none; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .print-btn:hover { background: #218838; }
+
+        .tambah-btn { padding: 8px 16px; background: var(--blue); color: #ffffff; border: none; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; display: none; align-items: center; gap: 6px; }
+        .tambah-btn:hover { filter: brightness(0.9); }
+
+        .login-kadus-btn { padding: 8px 16px; background: var(--gold); color: var(--navy); border: none; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .logout-kadus-btn { padding: 8px 16px; background: #dc3545; color: #ffffff; border: none; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+
+        table.data-table { width: 100%; border-collapse: collapse; text-align: left; margin-top: 10px; }
+        table.data-table th { background-color: var(--navy); color: #ffffff; padding: 14px 16px; font-size: 14px; font-family: var(--font-display); }
+        table.data-table td { padding: 14px 16px; border-bottom: 1px solid var(--line); font-size: 14px; color: var(--ink); vertical-align: middle; }
+        table.data-table tr:hover { background-color: #f8f9fc; }
+        
+        .btn-detail-link { background: #eef2f7; color: var(--blue); padding: 6px 14px; border-radius: 6px; font-size: 12.5px; font-weight: 600; border: none; cursor: pointer; }
+        .btn-detail-link:hover { background: var(--blue); color: #fff; }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
+        .modal-content { background: #ffffff; padding: 25px 30px; border-radius: 16px; max-width: 600px; width: 95%; text-align: left; position: relative; max-height: 90vh; overflow-y: auto; }
+        .close-btn { position: absolute; top: 15px; right: 20px; background: none; border: none; font-size: 22px; font-weight: bold; cursor: pointer; color: #525c73; }
+        
+        .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; background: var(--paper); padding: 15px; border-radius: 10px; font-size: 12px; }        
+        .modal-grid div b { display: block; color: var(--navy); font-size: 11px; text-transform: uppercase; margin-bottom: 2px; }
+
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 12.5px; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
+        .form-control { width: 100%; padding: 8px 10px; border: 1.5px solid var(--line); border-radius: 6px; font-size: 13px; box-sizing: border-box; outline: none; background: #fff; }
+        .form-control:focus { border-color: var(--blue); }
+
+        .kadus-btn { width: 100%; background: #28a745; color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; }
+        .kadus-btn:hover { filter: brightness(0.9); }
+
+        /* Styling untuk Tombol Mata Password */
+        .password-wrapper { position: relative; display: flex; align-items: center; margin-bottom: 12px; }
+        .password-wrapper .form-control { padding-right: 45px; text-align: left !important; }
+        .toggle-password { position: absolute; right: 12px; background: none; border: none; cursor: pointer; font-size: 16px; color: #525c73; }
+
+        @media print {
+            header, .rt-filter-row, .search-box, .print-btn, .tambah-btn, .btn-detail-link, .login-kadus-btn, .logout-kadus-btn { display: none !important; }
+            .table-box { border: none; box-shadow: none; padding: 0; }
+            body { background: #ffffff; }
+        }
+    </style>
+</head>
+<body style="background-color: #f4f6f9;">
+
+<!-- MODAL FORM TAMBAH WARGA BARU -->
+<div id="modalTambahWarga" class="modal-overlay" onclick="tutupTambahModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <button class="close-btn" onclick="tutupTambahModalBtn()">&times;</button>
+        <h3 style="font-family: var(--font-display); color: var(--navy); margin-bottom: 2px;">+ Tambah Kepala Keluarga</h3>
+        <p style="font-size: 12.5px; color: #525c73; margin-bottom: 15px;" id="infoTambahDusun">Dusun: -</p>
+        
+        <div class="form-group">
+            <label>Nama Kepala Keluarga *</label>
+            <input type="text" id="tambahNama" class="form-control" placeholder="Contoh: Budi Santoso">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="form-group">
+                <label>NIK / No. KK *</label>
+                <input type="text" id="tambahNik" class="form-control" placeholder="332301...">
+            </div>
+            <div class="form-group">
+                <label>RT *</label>
+                <input type="text" id="tambahRt" class="form-control" placeholder="Contoh: RT 01">
+            </div>
+        </div>
+
+        <div class="modal-grid" style="margin-top: 5px; margin-bottom: 15px;">
+            <div>
+                <b>1. Kepemilikan Rumah</b>
+                <input type="text" id="tambahKepemilikan" class="form-control" placeholder="Milik Sendiri">
+            </div>
+            <div>
+                <b>2. Fasilitas Kamar Mandi</b>
+                <input type="text" id="tambahKamarMandi" class="form-control" placeholder="Pribadi">
+            </div>
+            
+            <div>
+                <b>3. Penggunaan Air</b>
+                <input type="text" id="tambahAir" class="form-control" placeholder="PAM / Sumur">
+            </div>
+            <div style="background: #fdfdfd; padding: 5px; border-radius: 6px; border: 1px solid #eee;">
+                <b>4. Kondisi Rumah:</b>
+                <div style="display: flex; gap: 4px; margin-top: 4px;">
+                    <select id="tambahAtap" class="form-control" style="font-size: 11px; padding: 4px;">
+                        <option value="GENTENG">GENTENG</option>
+                        <option value="ASBES">ASBES</option>
+                        <option value="SENG">SENG</option>
+                        <option value="KAYU/BAMBU">KAYU/BAMBU</option>
+                    </select>
+                    <select id="tambahDinding" class="form-control" style="font-size: 11px; padding: 4px;">
+                        <option value="TEMBOK">TEMBOK</option>
+                        <option value="KAYU">KAYU</option>
+                        <option value="BAMBU/GEDEK">BAMBU/GEDEK</option>
+                    </select>
+                    <select id="tambahLantai" class="form-control" style="font-size: 11px; padding: 4px;">
+                        <option value="KERAMIK">KERAMIK</option>
+                        <option value="SEMEN">SEMEN</option>
+                        <option value="TANAH">TANAH</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <b>5. Penduduk (Jiwa)</b>
+                <input type="number" id="tambahJumlahJiwa" class="form-control" value="1">
+            </div>
+            <div>
+                <b>6. Kemiskinan (Desil)</b>
+                <input type="text" id="tambahKemiskinan" class="form-control" placeholder="Desil 2">
+            </div>
+            <div>
+                <b>7. Pendidikan</b>
+                <input type="text" id="tambahPendidikan" class="form-control" placeholder="Tamatan SD">
+            </div>
+            <div>
+                <b>8. Bantuan Sosial</b>
+                <input type="text" id="tambahBantuan" class="form-control" placeholder="PKH / BLT Aktif">
+            </div>
+        </div>
+
+        <div class="form-group" style="background: #f8f9fc; padding: 12px; border-radius: 10px; border: 1.5px dashed var(--line); margin-bottom: 15px;">
+            <label style="margin-bottom: 8px;">📷 Foto Kondisi Rumah Warga (Opsional)</label>
+            <input type="file" id="inputFotoRumah" accept="image/*" capture="environment" style="font-size: 12px;" onchange="previewFotoRumah(event)">
+            <div id="previewContainer" style="margin-top: 10px; display: none;">
+                <img id="imgPreview" src="" alt="Preview Foto Rumah" style="max-height: 120px; border-radius: 6px; border: 1px solid var(--line);">
+            </div>
+        </div>
+
+        <button class="kadus-btn" onclick="simpanWargaBaru()">Simpan Data ke Supabase</button>
+    </div>
+</div>
+
+<!-- POP-UP LOGIN KADUS -->
+<div id="modalLoginKadus" class="modal-overlay">
+    <div class="modal-content" style="max-width: 380px; text-align: center;">
+        <button class="close-btn" onclick="tutupLoginModal()">&times;</button>
+        <h3 style="font-family: var(--font-display); color: var(--navy); margin-bottom: 8px;">Otorisasi Kepala Dusun</h3>
+        <p id="teksInfoDusun" style="font-size: 13px; color: #525c73; margin-bottom: 15px;">Masukkan password untuk mengelola dusun.</p>
+        
+        <div class="password-wrapper">
+            <input type="password" id="inputPasswordAdmin" class="form-control" placeholder="Masukkan password dusun...">
+            <button type="button" class="toggle-password" onclick="togglePasswordVisibility()" title="Lihat/Sembunyikan Password">👁️</button>
+        </div>
+
+        <button class="kadus-btn" onclick="verifikasiPasswordKadus()">Masuk & Aktifkan Edit</button>
+        <div id="pesanGagal" style="margin-top: 10px; font-size: 13px; color: #dc3545; display: none; font-weight: 600;"></div>
+    </div>
+</div>
+
+<header>
+    <nav>
+        <a href="index.html" class="logo">
+            <span>GOWIN<small>Data &amp; Profil Desa</small></span>
+        </a>
+        <div class="nav-links">
+            <a href="index.html" style="color: var(--blue); font-weight: 600;">← Kembali ke Beranda</a>
+        </div>
+    </nav>
+</header>
+
+<div class="detail-container">
+    <div class="section-head" style="margin-bottom: 30px;">
+        <h2 id="pageTitle" style="font-family: var(--font-display); font-size: 32px; color: var(--navy); margin-bottom: 10px;">Data Kepala Keluarga</h2>
+        <p id="subTitle" style="color: #525c73; font-size: 15px;">Pilih RT atau ketik nama warga untuk melihat rincian.</p>
+    </div>
+
+    <div class="top-action-row">
+        <div class="rt-filter-row" id="filterContainer"></div>
+        
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <input type="text" id="searchInput" class="search-box" placeholder="Cari nama kepala keluarga..." onkeyup="cariWarga()">
+            <button class="print-btn" onclick="window.print()">Cetak / PDF</button>
+            <button id="btnTambahWarga" class="tambah-btn" onclick="bukaTambahModal()">+ Tambah Warga</button>
+            <button class="login-kadus-btn" onclick="bukaLoginModal()">🔒 Login Kadus</button>
+            <button class="logout-kadus-btn" onclick="logoutKadus()">🔓 Logout</button>
+        </div>
+    </div>
+
+    <div class="table-box">
+        <h3 id="tabelJudul" style="font-family: var(--font-display); font-size: 18px; color: var(--navy); margin-bottom: 15px;">Daftar Warga</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Nama Kepala Keluarga</th>
+                    <th>RT</th>
+                    <th>Jumlah Anggota Keluarga</th>
+                    <th style="text-align: right; width: 130px;">Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="tabelData">
+                <tr><td colspan="4" style="text-align:center; color:#525c73; font-style:italic;">Memuat data dari database Supabase...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- MODAL DETAIL / EDIT WARGA -->
+<div id="fotoModal" class="modal-overlay" onclick="tutupModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <button class="close-btn" onclick="tutupModalBtn()">&times;</button>
+        
+        <!-- BAGIAN NAMA, NIK, DAN ALAMAT YANG BISA DIEDIT -->
+        <div id="containerHeaderModal" style="text-align: center; margin-bottom: 15px;">
+            <div id="modalNamaWrap" style="margin-bottom: 6px;"></div>
+            <div id="modalNikWrap" style="font-size: 12.5px; color: #525c73; margin-bottom: 4px;"></div>
+            <div id="modalAlamatWrap" style="font-size: 12.5px; color: #525c73;"></div>
+        </div>
+        
+        <!-- TAMPILAN FOTO RUMAH DI MODAL DETAIL / EDIT -->
+        <div id="containerFotoModal" style="text-align: center; margin-bottom: 15px;">
+            <img id="modalFotoRumah" src="" alt="Foto Rumah Warga" style="max-height: 160px; border-radius: 8px; border: 1.5px solid var(--line); display: none; margin: 0 auto 8px auto;">
+            <div id="containerUploadEdit" style="display: none; background: #f8f9fc; padding: 10px; border-radius: 8px; border: 1.5px dashed var(--line);">
+                <label style="display: block; font-size: 11.5px; font-weight: 700; color: var(--navy); margin-bottom: 5px;">📷 Ganti / Tambah Foto Rumah (Kamera / Galeri)</label>
+                <input type="file" id="inputEditFotoRumah" accept="image/*" capture="environment" style="font-size: 11.5px;" onchange="previewEditFotoRumah(event)">
+            </div>
+        </div>
+
+        <div class="modal-grid">
+            <div><b>1. Kepemilikan Rumah</b><div id="mKepemilikan">-</div></div>
+            <div><b>2. Fasilitas Kamar Mandi</b><div id="mKamarMandi">-</div></div>
+            <div><b>3. Penggunaan Air</b><div id="mAir">-</div></div>
+            <div style="background: #fdfdfd; padding: 5px; border-radius: 6px; border: 1px solid #eee;">
+                <b>4. Kondisi Rumah:</b>
+                <div style="margin-top: 4px; color: #c5221f;">
+                    Atap: <span id="mAtap" style="color: #333;">-</span> | 
+                    Dinding: <span id="mDinding" style="color: #333;">-</span> | 
+                    Lantai: <span id="mLantai" style="color: #333;">-</span>
+                </div>
+            </div>
+            <div><b>5. Penduduk (Jiwa)</b><div id="mPenduduk">-</div></div>
+            <div><b>6. Kemiskinan (Desil)</b><div id="mKemiskinan">-</div></div>
+            <div><b>7. Pendidikan</b><div id="mPendidikan">-</div></div>
+            <div><b>8. Bantuan Sosial</b><div id="mBantuan">-</div></div>
+        </div>
+
+        <div id="containerTombolSimpan" style="margin-top: 20px;"></div>
+    </div>
+</div>
+
+<script>
+    const SUPABASE_URL = 'https://ktqtxtjjghvpyrlxclwp.supabase.co';
+    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_RXYccBhx7piFKdpWXxpDgg_5ZM24L-m';
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+    const passwordDatabase = {
+        "GANDU": "gandu123", "CARIKAN": "carikan234", "KLURAK": "klurak345",
+        "GAMBLOK": "gamblok456", "KEJAWAN": "kejawan567", "PANCAS": "pancas678",
+        "KEDAWUNG": "kedawung789", "KALIGALANG": "kaligalang890", "KARANGREJO": "karangrejo901"
+    };
+
+    const urlParams = new URLSearchParams(window.location.search);
+    let dusunAktif = urlParams.get('dusun') ? urlParams.get('dusun').toUpperCase() : 'GAMBLOK'; 
+    let indexWargaAktif = null;
+    let nikWargaAktif = "";
+    let semuaDataWarga = [];
+    let rtAktif = 'RT 01';
+    let base64FotoRumah = "";
+    let base64EditFotoRumah = "";
+
+    window.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('teksInfoDusun').innerText = `Masukkan password khusus Dusun ${dusunAktif}.`;
+        document.getElementById('infoTambahDusun').innerText = `Dusun: ${dusunAktif}`;
+        document.getElementById('pageTitle').innerText = `Data Kepala Keluarga — Dusun ${dusunAktif}`;
+        
+        cekStatusLoginKadus();
+        muatDataDariSupabase();
+    });
+
+    function cekStatusLoginKadus() {
+        let isLogin = sessionStorage.getItem('kadus_logged_in') === 'true';
+        let btnTambah = document.getElementById('btnTambahWarga');
+        btnTambah.style.display = isLogin ? 'flex' : 'none';
+    }
+
+    async function muatDataDariSupabase() {
+        let { data, error } = await _supabase.from('Penduduk').select('*');
+        
+        if (error) {
+            console.error("Detail Error Supabase:", error);
+            document.getElementById('tabelData').innerHTML = `
+                <tr>
+                    <td colspan="4" style="text-align:center; padding: 25px; color:#dc3545;">
+                        <b>Koneksi Supabase Belum Terbuka:</b> ${error.message}<br>
+                        <small style="color:#525c73;">Pastikan RLS pada tabel 'Penduduk' di Supabase sudah dimatikan (Disable RLS).</small>
+                    </td>
+                </tr>`;
+            return;
+        }
+
+        semuaDataWarga = data || [];
+        inisialisasiTombolRT();
+    }
+
+    function previewFotoRumah(event) {
+        let file = event.target.files[0];
+        if (file) {
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                base64FotoRumah = e.target.result;
+                document.getElementById('imgPreview').src = base64FotoRumah;
+                document.getElementById('previewContainer').style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function previewEditFotoRumah(event) {
+        let file = event.target.files[0];
+        if (file) {
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                base64EditFotoRumah = e.target.result;
+                document.getElementById('modalFotoRumah').src = base64EditFotoRumah;
+                document.getElementById('modalFotoRumah').style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function bukaTambahModal() {
+        let isLogin = sessionStorage.getItem('kadus_logged_in') === 'true';
+        if (!isLogin) {
+            alert("Akses ditolak! Fitur tambah warga hanya dapat diakses oleh Kepala Dusun yang sudah Login.");
+            bukaLoginModal();
+            return;
+        }
+        document.getElementById('modalTambahWarga').style.display = 'flex';
+        document.getElementById('tambahRt').value = rtAktif || 'RT 01';
+        document.getElementById('inputFotoRumah').value = '';
+        document.getElementById('previewContainer').style.display = 'none';
+        base64FotoRumah = "";
+    }
+
+    function tutupTambahModalBtn() { document.getElementById('modalTambahWarga').style.display = 'none'; }
+    function tutupTambahModal(e) { if(e.target.id === 'modalTambahWarga') tutupTambahModalBtn(); }
+
+    async function simpanWargaBaru() {
+        let isLogin = sessionStorage.getItem('kadus_logged_in') === 'true';
+        if (!isLogin) {
+            alert("Sesi login Anda telah berakhir.");
+            return;
+        }
+
+        let nama = document.getElementById('tambahNama').value.trim();
+        let nik = document.getElementById('tambahNik').value.trim();
+        let rt = document.getElementById('tambahRt').value.trim();
+        let jumlah_jiwa = parseInt(document.getElementById('tambahJumlahJiwa').value) || 1;
+        let kepemilikan_rumah = document.getElementById('tambahKepemilikan').value.trim() || 'Milik Sendiri';
+        let kamar_mandi = document.getElementById('tambahKamarMandi').value.trim() || 'Pribadi';
+        let penggunaan_air = document.getElementById('tambahAir').value.trim() || 'PAM / Sumur';
+        let atap = document.getElementById('tambahAtap').value;
+        let dinding = document.getElementById('tambahDinding').value;
+        let lantai = document.getElementById('tambahLantai').value;
+        let status_kemiskinan = document.getElementById('tambahKemiskinan').value.trim() || 'Desil 2';
+        let pendidikan = document.getElementById('tambahPendidikan').value.trim() || 'Tamatan SD';
+        let bantuan_sosial = document.getElementById('tambahBantuan').value.trim() || 'PKH / BLT Aktif';
+
+        if (!nama || !nik) {
+            alert("Nama dan NIK wajib diisi!");
+            return;
+        }
+
+        let { error } = await _supabase.from('Penduduk').insert([{
+            nama: nama, nik: nik, dusun: dusunAktif, rt: rt,
+            jumlah_jiwa: jumlah_jiwa, kepemilikan_rumah: kepemilikan_rumah,
+            kamar_mandi: kamar_mandi, penggunaan_air: penggunaan_air,
+            atap: atap, dinding: dinding, lantai: lantai,
+            status_kemiskinan: status_kemiskinan, pendidikan: pendidikan, bantuan_sosial: bantuan_sosial,
+            foto_rumah: base64FotoRumah
+        }]);
+
+        if (error) {
+            alert("Gagal menambahkan ke Supabase: " + error.message);
+            return;
+        }
+
+        alert("Berhasil! Warga baru dan foto rumah berhasil disimpan ke Supabase.");
+        document.getElementById('tambahNama').value = '';
+        document.getElementById('tambahNik').value = '';
+        tutupTambahModalBtn();
+        muatDataDariSupabase();
+    }
+
+    function inisialisasiTombolRT() {
+        const filterContainer = document.getElementById('filterContainer');
+        filterContainer.innerHTML = '';
+
+        let daftarRTSet = new Set();
+        semuaDataWarga.forEach(w => {
+            let dusunData = String(w.dusun || '').trim().toUpperCase();
+            let rtData = String(w.rt || '').trim();
+            if (dusunData === dusunAktif && rtData && rtData !== '-') {
+                daftarRTSet.add(rtData);
+            }
+        });
+
+        let daftarRT = Array.from(daftarRTSet).sort((a, b) => a.localeCompare(b, undefined, {numeric: true}));
+        if (daftarRT.length === 0) daftarRT = ['RT 01'];
+        
+        const selectDropdown = document.createElement('select');
+        selectDropdown.className = 'search-box'; 
+        selectDropdown.style.width = 'auto'; 
+        selectDropdown.style.cursor = 'pointer';
+        selectDropdown.style.fontWeight = '600';
+        selectDropdown.style.color = 'var(--navy)';
+        
+        selectDropdown.onchange = function() { tampilkanData(this.value); };
+
+        daftarRT.forEach((rt) => {
+            const option = document.createElement('option');
+            option.value = rt;
+            option.innerText = rt;
+            selectDropdown.appendChild(option);
+        });
+
+        filterContainer.appendChild(selectDropdown);
+        rtAktif = daftarRT[0];
+        tampilkanData(rtAktif);
+    }
+
+    function tampilkanData(rtPilih) {
+        rtAktif = rtPilih;
+        document.getElementById('searchInput').value = ''; 
+        muatTabel(semuaDataWarga);
+    }
+
+    function cariWarga() {
+        const keyword = document.getElementById('searchInput').value.toLowerCase();
+        const dataFiltered = semuaDataWarga.filter(w => {
+            let namaWarga = String(w.nama || '').toLowerCase();
+            let dusunData = String(w.dusun || '').trim().toUpperCase();
+            let rtData = String(w.rt || '').trim().toUpperCase();
+            
+            return (dusunData === dusunAktif) && namaWarga.includes(keyword) && (keyword ? true : rtData === rtAktif.toUpperCase());
+        });
+
+        renderTabel(dataFiltered, `Hasil Pencarian di Dusun ${dusunAktif} (Total: ${dataFiltered.length} KK)`);
+    }
+
+    function muatTabel(data) {
+        const dataFiltered = data.filter(w => {
+            let dusunData = String(w.dusun || '').trim().toUpperCase();
+            let rtData = String(w.rt || '').trim().toUpperCase();
+            return dusunData === dusunAktif && rtData === rtAktif.toUpperCase();
+        });
+
+        renderTabel(dataFiltered, `Daftar Warga Dusun ${dusunAktif} (${rtAktif} - Total: ${dataFiltered.length} KK)`);
+    }
+
+    function renderTabel(dataFiltered, judulTeks) {
+        const tbody = document.getElementById('tabelData');
+        tbody.innerHTML = ''; 
+        document.getElementById('tabelJudul').innerText = judulTeks;
+
+        let isLogin = sessionStorage.getItem('kadus_logged_in') === 'true';
+
+        if (dataFiltered.length === 0) {
+            let tombolTambahKosong = isLogin ? `<br><br><button onclick="bukaTambahModal()" class="tambah-btn" style="margin: 0 auto; display: flex;">+ Tambah Data Pertama Sekarang</button>` : '';
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="4" style="text-align:center; padding: 30px; color:#525c73;">
+                        Belum ada data warga di Dusun ${dusunAktif} (${rtAktif}).
+                        ${tombolTambahKosong}
+                    </td>
+                </tr>`;
+            return;
+        }
+
+        dataFiltered.forEach((w) => {
+            let indexAsli = semuaDataWarga.indexOf(w);
+            let jumlahJiwa = (w.jumlah_jiwa !== null && w.jumlah_jiwa !== undefined) ? w.jumlah_jiwa + " Jiwa" : "0 Jiwa";
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong onclick="bukaModal(${indexAsli})" style="cursor: pointer; color: var(--navy);">${w.nama}</strong></td>
+                <td>${w.rt}</td>
+                <td><span style="color: var(--navy); font-weight: 500;">${jumlahJiwa}</span></td>
+                <td style="text-align: right;"><button class="btn-detail-link" onclick="bukaModal(${indexAsli})">Lihat Detail</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function bukaModal(index) {
+        indexWargaAktif = index;
+        let w = semuaDataWarga[index];
+        nikWargaAktif = w.nik;
+        base64EditFotoRumah = w.foto_rumah || "";
+
+        let modalOverlay = document.getElementById('fotoModal');
+        modalOverlay.style.display = 'flex';
+        let isLogin = sessionStorage.getItem('kadus_logged_in') === 'true';
+        let containerBtnSimpan = document.getElementById('containerTombolSimpan');
+        containerBtnSimpan.innerHTML = '';
+
+        let imgEl = document.getElementById('modalFotoRumah');
+        let containerUploadEdit = document.getElementById('containerUploadEdit');
+        document.getElementById('inputEditFotoRumah').value = '';
+
+        if (w.foto_rumah) {
+            imgEl.src = w.foto_rumah;
+            imgEl.style.display = 'block';
+        } else {
+            imgEl.style.display = 'none';
+        }
+
+        if (isLogin) {
+            containerUploadEdit.style.display = 'block';
+            
+            // Kolom Nama, NIK, dan RT Menjadi Input saat Mode Edit Aktif
+            document.getElementById('modalNamaWrap').innerHTML = `<input type="text" id="editNama" value="${w.nama || ''}" class="form-control" style="font-family: var(--font-display); font-size: 18px; font-weight: bold; text-align: center;">`;
+            document.getElementById('modalNikWrap').innerHTML = `NIK: <input type="text" id="editNik" value="${w.nik || ''}" class="form-control" style="display: inline-block; width: 200px; text-align: center; padding: 4px;">`;
+            document.getElementById('modalAlamatWrap').innerHTML = `Alamat RT: <input type="text" id="editRt" value="${w.rt || ''}" class="form-control" style="display: inline-block; width: 100px; text-align: center; padding: 4px;"> - Dusun ${dusunAktif}`;
+            
+            document.getElementById('mKepemilikan').innerHTML = `<input type="text" id="editKepemilikan" value="${w.kepemilikan_rumah || 'Milik Sendiri'}" class="form-control">`;
+            document.getElementById('mKamarMandi').innerHTML = `<input type="text" id="editKamarMandi" value="${w.kamar_mandi || 'Pribadi'}" class="form-control">`;
+            document.getElementById('mAir').innerHTML = `<input type="text" id="editAir" value="${w.penggunaan_air || 'PAM / Sumur'}" class="form-control">`;
+            
+            document.getElementById('mAtap').innerHTML = `
+                <select id="editAtap" class="form-control">
+                    <option value="GENTENG" ${w.atap==='GENTENG'?'selected':''}>GENTENG</option>
+                    <option value="ASBES" ${w.atap==='ASBES'?'selected':''}>ASBES</option>
+                    <option value="SENG" ${w.atap==='SENG'?'selected':''}>SENG</option>
+                    <option value="KAYU/BAMBU" ${w.atap==='KAYU/BAMBU'?'selected':''}>KAYU/BAMBU</option>
+                </select>`;
+            document.getElementById('mDinding').innerHTML = `
+                <select id="editDinding" class="form-control">
+                    <option value="TEMBOK" ${w.dinding==='TEMBOK'?'selected':''}>TEMBOK</option>
+                    <option value="KAYU" ${w.dinding==='KAYU'?'selected':''}>KAYU</option>
+                    <option value="BAMBU/GEDEK" ${w.dinding==='BAMBU/GEDEK'?'selected':''}>BAMBU/GEDEK</option>
+                </select>`;
+            document.getElementById('mLantai').innerHTML = `
+                <select id="editLantai" class="form-control">
+                    <option value="KERAMIK" ${w.lantai==='KERAMIK'?'selected':''}>KERAMIK</option>
+                    <option value="SEMEN" ${w.lantai==='SEMEN'?'selected':''}>SEMEN</option>
+                    <option value="TANAH" ${w.lantai==='TANAH'?'selected':''}>TANAH</option>
+                </select>`;
+            
+            document.getElementById('mPenduduk').innerHTML = `<input type="number" id="editPenduduk" value="${w.jumlah_jiwa || 0}" class="form-control">`;
+            document.getElementById('mKemiskinan').innerHTML = `<input type="text" id="editKemiskinan" value="${w.status_kemiskinan || 'Desil 2'}" class="form-control">`;
+            document.getElementById('mPendidikan').innerHTML = `<input type="text" id="editPendidikan" value="${w.pendidikan || 'Tamatan SD'}" class="form-control">`;
+            document.getElementById('mBantuan').innerHTML = `<input type="text" id="editBantuan" value="${w.bantuan_sosial || 'PKH / BLT Aktif'}" class="form-control">`;
+
+            containerBtnSimpan.innerHTML = `<button class="kadus-btn" style="background: #28a745;" onclick="simpanDataDariModal()">Simpan Perubahan Data</button>`;
+        } else {
+            containerUploadEdit.style.display = 'none';
+            
+            // Mode Tulis Biasa (Jika belum login Kadus)
+            document.getElementById('modalNamaWrap').innerHTML = `<h3 style="font-family: var(--font-display); font-size: 20px; color: var(--navy); margin: 0;">${w.nama || '-'}</h3>`;
+            document.getElementById('modalNikWrap').innerText = `NIK: ${w.nik || '-'}`;
+            document.getElementById('modalAlamatWrap').innerText = `Alamat: ${w.rt || '-'} - Dusun ${dusunAktif}`;
+            
+            document.getElementById('mKepemilikan').innerHTML = `<span style="font-weight:600;">${w.kepemilikan_rumah || 'Milik Sendiri'}</span>`;
+            document.getElementById('mKamarMandi').innerHTML = `<span style="font-weight:600;">${w.kamar_mandi || 'Pribadi'}</span>`;
+            document.getElementById('mAir').innerHTML = `<span style="font-weight:600;">${w.penggunaan_air || 'PAM / Sumur'}</span>`;
+            
+            document.getElementById('mAtap').innerText = w.atap || 'GENTENG';
+            document.getElementById('mDinding').innerText = w.dinding || 'TEMBOK';
+            document.getElementById('mLantai').innerText = w.lantai || 'KERAMIK';
+            
+            document.getElementById('mPenduduk').innerHTML = `<span style="font-weight:600;">${w.jumlah_jiwa || 0} Jiwa</span>`;
+            document.getElementById('mKemiskinan').innerText = w.status_kemiskinan || 'Desil 2';
+            document.getElementById('mPendidikan').innerText = w.pendidikan || 'Tamatan SD';
+            document.getElementById('mBantuan').innerText = w.bantuan_sosial || 'PKH / BLT Aktif';
+            
+            containerBtnSimpan.innerHTML = '';
+        }
+    }
+
+    async function simpanDataDariModal() {
+        let isLogin = sessionStorage.getItem('kadus_logged_in') === 'true';
+        if (!isLogin) {
+            alert("Aksi ditolak. Sesi Anda telah berakhir.");
+            return;
+        }
+
+        if (indexWargaAktif !== null && semuaDataWarga[indexWargaAktif]) {
+            let namaBaru = document.getElementById('editNama').value.trim();
+            let nikBaru = document.getElementById('editNik').value.trim();
+            let rtBaru = document.getElementById('editRt').value.trim();
+
+            if (!namaBaru || !nikBaru) {
+                alert("Nama dan NIK tidak boleh kosong!");
+                return;
+            }
+
+            let { error } = await _supabase.from('Penduduk').update({
+                nama: namaBaru,
+                nik: nikBaru,
+                rt: rtBaru,
+                jumlah_jiwa: parseInt(document.getElementById('editPenduduk').value) || 0,
+                kepemilikan_rumah: document.getElementById('editKepemilikan').value,
+                kamar_mandi: document.getElementById('editKamarMandi').value,
+                penggunaan_air: document.getElementById('editAir').value,
+                atap: document.getElementById('editAtap').value,
+                dinding: document.getElementById('editDinding').value,
+                lantai: document.getElementById('editLantai').value,
+                status_kemiskinan: document.getElementById('editKemiskinan').value,
+                pendidikan: document.getElementById('editPendidikan').value,
+                bantuan_sosial: document.getElementById('editBantuan').value,
+                foto_rumah: base64EditFotoRumah
+            }).eq('nik', nikWargaAktif);
+
+            if (error) {
+                alert("Gagal update data: " + error.message);
+                return;
+            }
+
+            alert("Data identitas, alamat, dan foto rumah berhasil diperbarui ke Supabase!");
+            tutupModalBtn();
+            muatDataDariSupabase();
+        }
+    }
+
+    function bukaLoginModal() { 
+        document.getElementById('modalLoginKadus').style.display = 'flex'; 
+        document.getElementById('inputPasswordAdmin').value = '';
+    }
+    function tutupLoginModal() { document.getElementById('modalLoginKadus').style.display = 'none'; }
+    
+    function logoutKadus() {
+        sessionStorage.removeItem('kadus_logged_in');
+        alert("Logout Berhasil! Halaman kembali terkunci untuk umum.");
+        window.location.reload();
+    }
+
+    function verifikasiPasswordKadus() {
+        let input = document.getElementById('inputPasswordAdmin').value;
+        let valid = passwordDatabase[dusunAktif] || "admin123";
+        if (input === valid) {
+            sessionStorage.setItem('kadus_logged_in', 'true');
+            tutupLoginModal();
+            cekStatusLoginKadus();
+            muatDataDariSupabase();
+            alert(`Login Berhasil! Mode Tambah & Edit untuk Dusun ${dusunAktif} telah diaktifkan.`);
+        } else {
+            let err = document.getElementById('pesanGagal');
+            err.style.display = 'block';
+            err.innerText = "Password salah!";
+        }
+    }
+
+    function tutupModalBtn() { document.getElementById('fotoModal').style.display = 'none'; }
+    function tutupModal(e) { if (e.target.id === 'fotoModal') tutupModalBtn(); }
+
+    // Fungsi untuk menampilkan / menyembunyikan password
+    function togglePasswordVisibility() {
+        let inputPwd = document.getElementById('inputPasswordAdmin');
+        if (inputPwd.type === "password") {
+            inputPwd.type = "text";
+        } else {
+            inputPwd.type = "password";
+        }
+    }
+</script>
+
+</body>
+</html>

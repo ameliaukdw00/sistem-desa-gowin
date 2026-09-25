@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Kematian — Desa Gondang Winangun</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Pustaka JavaScript Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .detail-container { max-width: 1180px; margin: 40px auto; padding: 0 20px; }
+        .table-box { background: #ffffff; border: 1.5px solid var(--line); border-radius: 18px; padding: 30px; box-shadow: 0 10px 30px -15px rgba(18, 35, 63, 0.08); overflow-x: auto; }
+        
+        .top-action-row { display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; margin-bottom: 25px; }
+        .filter-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        
+        .search-box { padding: 8px 16px; border: 1.5px solid var(--line); border-radius: 8px; font-size: 13px; outline: none; width: 220px; transition: border-color 0.2s; }
+        .search-box:focus { border-color: var(--blue); }
+
+        .print-btn { padding: 8px 16px; background: #28a745; color: #ffffff; border: none; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .print-btn:hover { background: #218838; }
+
+        .tambah-btn { padding: 8px 16px; background: var(--blue); color: #ffffff; border: none; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; display: none; align-items: center; gap: 6px; }
+        .tambah-btn:hover { filter: brightness(0.9); }
+
+        .login-admin-btn { padding: 8px 16px; background: var(--gold); color: var(--navy); border: none; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .logout-admin-btn { padding: 8px 16px; background: #dc3545; color: #ffffff; border: none; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; display: none; align-items: center; gap: 6px; }
+
+        table.data-table { width: 100%; border-collapse: collapse; text-align: left; margin-top: 10px; }
+        table.data-table th { background-color: var(--navy); color: #ffffff; padding: 14px 16px; font-size: 14px; font-family: var(--font-display); }
+        table.data-table td { padding: 14px 16px; border-bottom: 1px solid var(--line); font-size: 14px; color: var(--ink); vertical-align: middle; }
+        table.data-table tr:hover { background-color: #f8f9fc; }
+        
+        .btn-edit { background: #eef2f7; color: var(--blue); padding: 6px 14px; border-radius: 6px; font-size: 12.5px; font-weight: 600; border: none; cursor: pointer; display: none; }
+        .btn-edit:hover { background: var(--blue); color: #fff; }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
+        .modal-content { background: #ffffff; padding: 25px 30px; border-radius: 16px; max-width: 500px; width: 95%; text-align: left; position: relative; max-height: 90vh; overflow-y: auto; }
+        .close-btn { position: absolute; top: 15px; right: 20px; background: none; border: none; font-size: 22px; font-weight: bold; cursor: pointer; color: #525c73; }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 12.5px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
+        .form-control { width: 100%; padding: 10px; border: 1.5px solid var(--line); border-radius: 8px; font-size: 13px; box-sizing: border-box; outline: none; background: #fff; }
+        .form-control:focus { border-color: var(--blue); }
+
+        .password-wrapper { position: relative; display: flex; align-items: center; margin-bottom: 12px; }
+        .password-wrapper .form-control { padding-right: 45px; text-align: left !important; }
+        .toggle-password { position: absolute; right: 12px; background: none; border: none; cursor: pointer; font-size: 16px; color: #525c73; }
+
+        .btn-action { width: 100%; background: #28a745; color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; }
+        .btn-action:hover { filter: brightness(0.9); }
+
+        @media print {
+            header, .top-action-row, .btn-edit { display: none !important; }
+            .table-box { border: none; box-shadow: none; padding: 0; }
+            body { background: #ffffff; }
+        }
+    </style>
+</head>
+<body style="background-color: #f4f6f9;">
+
+<!-- MODAL LOGIN ADMIN -->
+<div id="modalLoginAdmin" class="modal-overlay">
+    <div class="modal-content" style="max-width: 380px; text-align: center;">
+        <button class="close-btn" onclick="tutupLoginModal()">&times;</button>
+        <h3 style="font-family: var(--font-display); color: var(--navy); margin-bottom: 8px;">Otorisasi Admin Desa</h3>
+        <p style="font-size: 13px; color: #525c73; margin-bottom: 15px;">Masukkan password Admin untuk mengelola rekapitulasi data kematian desa.</p>
+        
+        <div class="password-wrapper">
+            <input type="password" id="inputPasswordAdmin" class="form-control" placeholder="Masukkan password Admin...">
+            <button type="button" class="toggle-password" onclick="togglePasswordVisibility()" title="Lihat/Sembunyikan Password">👁️</button>
+        </div>
+
+        <button class="btn-action" onclick="verifikasiPasswordAdmin()">Masuk & Aktifkan Edit</button>
+        <div id="pesanGagal" style="margin-top: 10px; font-size: 13px; color: #dc3545; display: none; font-weight: 600;"></div>
+    </div>
+</div>
+
+<!-- MODAL FORM TAMBAH / EDIT KEMATIAN -->
+<div id="modalFormKematian" class="modal-overlay" onclick="tutupFormModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <button class="close-btn" onclick="tutupFormModalBtn()">&times;</button>
+        <h3 id="modalTitleForm" style="font-family: var(--font-display); color: var(--navy); margin-bottom: 15px;">+ Tambah Data Kematian</h3>
+        
+        <div class="form-group">
+            <label>Nama Almarhum / Almarhumah *</label>
+            <input type="text" id="formNama" class="form-control" placeholder="Contoh: Budi Santoso">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="form-group">
+                <label>Tanggal Wafat *</label>
+                <input type="date" id="formTanggal" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>Usia (Tahun)</label>
+                <input type="number" id="formUsia" class="form-control" placeholder="Contoh: 65">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Sebab / Keterangan Kematian</label>
+            <input type="text" id="formSebab" class="form-control" placeholder="Contoh: Sakit / Usia Lanjut">
+        </div>
+
+        <div class="form-group">
+            <label>Asal Dusun *</label>
+            <!-- Diubah menjadi dropdown untuk Admin -->
+            <select id="formDusun" class="form-control" style="font-weight: 600;">
+                <option value="GANDU">Dusun GANDU</option>
+                <option value="CARIKAN">Dusun CARIKAN</option>
+                <option value="KLURAK">Dusun KLURAK</option>
+                <option value="GAMBLOK">Dusun GAMBLOK</option>
+                <option value="KEJAWAN">Dusun KEJAWAN</option>
+                <option value="PANCAS">Dusun PANCAS</option>
+                <option value="KEDAWUNG">Dusun KEDAWUNG</option>
+                <option value="KALIGALANG">Dusun KALIGALANG</option>
+                <option value="KARANGREJO">Dusun KARANGREJO</option>
+            </select>
+        </div>
+
+        <button class="btn-action" id="btnSimpanForm" onclick="simpanDataKematian()">Simpan Data</button>
+    </div>
+</div>
+
+<header>
+    <nav>
+        <a href="index.html" class="logo">
+            <span>GOWIN<small>Data &amp; Profil Desa</small></span>
+        </a>
+        <div class="nav-links">
+            <a href="index.html" style="color: var(--blue); font-weight: 600;">← Kembali ke Beranda</a>
+        </div>
+    </nav>
+</header>
+
+<div class="detail-container">
+    <div class="section-head" style="margin-bottom: 30px;">
+        <div class="eyebrow" style="color: var(--blue); font-weight: 700; letter-spacing: 0.1em; margin-bottom: 8px; text-transform: uppercase; font-size: 12px;">Kategori: Kematian</div>
+        <h2 style="font-family: var(--font-display); font-size: 32px; color: var(--navy); margin-bottom: 10px;">Catatan Kematian Warga</h2>
+        <p style="color: #525c73; font-size: 15px;">Rekapitulasi pelaporan warga yang meninggal dunia di Desa Gondang Winangun.</p>
+    </div>
+
+    <div class="top-action-row">
+        <div class="filter-row">
+            <span style="font-size: 13px; font-weight: 600; color: var(--navy);">Filter Dusun:</span>
+            <select id="filterDusunView" class="search-box" onchange="renderTabel()" style="width: auto; cursor: pointer; font-weight: 600;">
+                <option value="SEMUA">Semua Dusun</option>
+                <option value="GANDU">Gandu</option>
+                <option value="CARIKAN">Carikan</option>
+                <option value="KLURAK">Klurak</option>
+                <option value="GAMBLOK">Gamblok</option>
+                <option value="KEJAWAN">Kejawan</option>
+                <option value="PANCAS">Pancas</option>
+                <option value="KEDAWUNG">Kedawung</option>
+                <option value="KALIGALANG">Kaligalang</option>
+                <option value="KARANGREJO">Karangrejo</option>
+            </select>
+            <input type="text" id="searchInput" class="search-box" placeholder="Cari nama almarhum..." onkeyup="renderTabel()">
+        </div>
+        
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <button class="print-btn" onclick="window.print()">Cetak / PDF</button>
+            <button id="btnTambahData" class="tambah-btn" onclick="bukaFormTambah()">+ Tambah Data</button>
+            <button id="btnLogin" class="login-admin-btn" onclick="bukaLoginModal()">🔒 Login Admin</button>
+            <button id="btnLogout" class="logout-admin-btn" onclick="logoutAdmin()">🔓 Logout</button>
+        </div>
+    </div>
+
+    <div class="table-box">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="width: 50px;">No</th>
+                    <th>Nama Almarhum / Almarhumah</th>
+                    <th>Tanggal Wafat</th>
+                    <th>Usia</th>
+                    <th>Sebab / Keterangan</th>
+                    <th>Asal Dusun</th>
+                    <th id="kolomAksi" style="text-align: right; width: 100px; display: none;">Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="tabelDataKematian">
+                <tr><td colspan="7" style="text-align:center; color:#525c73; font-style:italic;">Memuat data dari database Supabase...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+  
+<script>
+    // Konfigurasi Koneksi Supabase
+    const SUPABASE_URL = 'https://ktqtxtjjghvpyrlxclwp.supabase.co';
+    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_RXYccBhx7piFKdpWXxpDgg_5ZM24L-m';
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+    // Password Khusus Admin Desa (Silakan ubah sesuai keinginan)
+    const PASSWORD_ADMIN = "admin123";
+
+    let semuaDataKematian = [];
+    let modeForm = 'tambah'; // 'tambah' atau 'edit'
+    let idEditAktif = null;
+
+    window.addEventListener('DOMContentLoaded', () => {
+        cekStatusLoginAdmin();
+        muatDataDariSupabase();
+    });
+
+    // --- AUTENTIKASI ADMIN ---
+    function cekStatusLoginAdmin() {
+        let isLogin = sessionStorage.getItem('admin_logged_in') === 'true';
+        if (isLogin) {
+            document.getElementById('btnLogin').style.display = 'none';
+            document.getElementById('btnLogout').style.display = 'flex';
+            document.getElementById('btnTambahData').style.display = 'flex';
+            document.getElementById('kolomAksi').style.display = 'table-cell';
+        } else {
+            document.getElementById('btnLogin').style.display = 'flex';
+            document.getElementById('btnLogout').style.display = 'none';
+            document.getElementById('btnTambahData').style.display = 'none';
+            document.getElementById('kolomAksi').style.display = 'none';
+        }
+    }
+
+    function bukaLoginModal() { 
+        document.getElementById('modalLoginAdmin').style.display = 'flex'; 
+        document.getElementById('inputPasswordAdmin').value = '';
+        document.getElementById('pesanGagal').style.display = 'none';
+    }
+    
+    function tutupLoginModal() { document.getElementById('modalLoginAdmin').style.display = 'none'; }
+    
+    function togglePasswordVisibility() {
+        let inputPwd = document.getElementById('inputPasswordAdmin');
+        inputPwd.type = (inputPwd.type === "password") ? "text" : "password";
+    }
+
+    function verifikasiPasswordAdmin() {
+        let input = document.getElementById('inputPasswordAdmin').value;
+
+        if (input === PASSWORD_ADMIN) {
+            sessionStorage.setItem('admin_logged_in', 'true');
+            tutupLoginModal();
+            cekStatusLoginAdmin();
+            renderTabel(); // Render ulang agar tombol edit muncul
+            alert(`Login Berhasil! Akses Kelola Data Kematian diaktifkan.`);
+        } else {
+            let err = document.getElementById('pesanGagal');
+            err.style.display = 'block';
+            err.innerText = "Password Admin salah!";
+        }
+    }
+
+    function logoutAdmin() {
+        sessionStorage.removeItem('admin_logged_in');
+        alert("Logout Berhasil! Halaman kembali terkunci untuk umum.");
+        window.location.reload();
+    }
+
+    // --- SUPABASE & RENDER TABEL ---
+    async function muatDataDariSupabase() {
+        let { data, error } = await _supabase
+            .from('Kematian')
+            .select('*')
+            .order('tanggal_wafat', { ascending: false });
+        
+        if (error) {
+            console.error("Detail Error Supabase:", error);
+            document.getElementById('tabelDataKematian').innerHTML = `
+                <tr><td colspan="7" style="text-align:center; padding: 25px; color:#dc3545;">
+                    <b>Koneksi Database Gagal:</b> ${error.message}
+                </td></tr>`;
+            return;
+        }
+
+        semuaDataKematian = data || [];
+        renderTabel();
+    }
+
+    function formatTanggalIndo(tanggalString) {
+        if (!tanggalString) return '-';
+        let options = { year: 'numeric', month: 'long', day: 'numeric' };
+        return new Date(tanggalString).toLocaleDateString('id-ID', options);
+    }
+
+    function renderTabel() {
+        const tbody = document.getElementById('tabelDataKematian');
+        tbody.innerHTML = ''; 
+
+        let filterDusun = document.getElementById('filterDusunView').value;
+        let keyword = document.getElementById('searchInput').value.toLowerCase();
+        let isLogin = sessionStorage.getItem('admin_logged_in') === 'true';
+
+        let dataFiltered = semuaDataKematian.filter(w => {
+            let matchDusun = (filterDusun === 'SEMUA') ? true : w.dusun === filterDusun;
+            let matchSearch = (w.nama || '').toLowerCase().includes(keyword);
+            return matchDusun && matchSearch;
+        });
+
+        if (dataFiltered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 30px; color:#525c73;">Belum ada catatan kematian yang sesuai.</td></tr>`;
+            return;
+        }
+
+        dataFiltered.forEach((item, index) => {
+            let nomor = (index + 1).toString().padStart(2, '0');
+            let usiaText = item.usia ? `${item.usia} Tahun` : '-';
+            
+            // Tombol Edit hanya muncul jika sedang login sebagai Admin
+            let actionHtml = '';
+            if (isLogin) {
+                actionHtml = `<td style="text-align: right;"><button class="btn-edit" style="display:inline-block;" onclick="bukaFormEdit(${item.id})">Edit</button></td>`;
+            }
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${nomor}</td>
+                <td><strong>${item.nama || '-'}</strong></td>
+                <td>${formatTanggalIndo(item.tanggal_wafat)}</td>
+                <td>${usiaText}</td>
+                <td>${item.keterangan || '-'}</td>
+                <td><span style="background: #eef2f7; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight:600; color:var(--navy);">${item.dusun || '-'}</span></td>
+                ${actionHtml}
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // --- FORM MODAL (TAMBAH & EDIT) ---
+    function tutupFormModalBtn() { document.getElementById('modalFormKematian').style.display = 'none'; }
+    function tutupFormModal(e) { if (e.target.id === 'modalFormKematian') tutupFormModalBtn(); }
+
+    function bukaFormTambah() {
+        let isLogin = sessionStorage.getItem('admin_logged_in') === 'true';
+        if (!isLogin) { return bukaLoginModal(); }
+
+        modeForm = 'tambah';
+        idEditAktif = null;
+        
+        document.getElementById('modalTitleForm').innerText = '+ Tambah Data Kematian';
+        document.getElementById('formNama').value = '';
+        document.getElementById('formTanggal').value = '';
+        document.getElementById('formUsia').value = '';
+        document.getElementById('formSebab').value = '';
+        document.getElementById('formDusun').value = 'GANDU'; // Default Reset
+        
+        document.getElementById('btnSimpanForm').innerText = 'Simpan Data Baru';
+        document.getElementById('modalFormKematian').style.display = 'flex';
+    }
+
+    function bukaFormEdit(id) {
+        modeForm = 'edit';
+        idEditAktif = id;
+        let dataToEdit = semuaDataKematian.find(x => x.id === id);
+
+        if (dataToEdit) {
+            document.getElementById('modalTitleForm').innerText = '✏️ Edit Data Kematian';
+            document.getElementById('formNama').value = dataToEdit.nama || '';
+            document.getElementById('formTanggal').value = dataToEdit.tanggal_wafat || '';
+            document.getElementById('formUsia').value = dataToEdit.usia || '';
+            document.getElementById('formSebab').value = dataToEdit.keterangan || '';
+            document.getElementById('formDusun').value = dataToEdit.dusun || 'GANDU';
+            
+            document.getElementById('btnSimpanForm').innerText = 'Simpan Perubahan';
+            document.getElementById('modalFormKematian').style.display = 'flex';
+        }
+    }
+
+    async function simpanDataKematian() {
+        let nama = document.getElementById('formNama').value.trim();
+        let tanggal = document.getElementById('formTanggal').value;
+        let usia = parseInt(document.getElementById('formUsia').value) || null;
+        let sebab = document.getElementById('formSebab').value.trim();
+        let dusun = document.getElementById('formDusun').value;
+
+        if (!nama || !tanggal) {
+            alert("Harap lengkapi Nama dan Tanggal Wafat!");
+            return;
+        }
+
+        document.getElementById('btnSimpanForm').innerText = 'Menyimpan...';
+
+        if (modeForm === 'tambah') {
+            let { error } = await _supabase.from('Kematian').insert([{
+                nama: nama, tanggal_wafat: tanggal, usia: usia, keterangan: sebab, dusun: dusun
+            }]);
+            
+            if (error) { alert("Gagal menyimpan data: " + error.message); } 
+            else { alert("Data kematian berhasil ditambahkan!"); }
+
+        } else if (modeForm === 'edit') {
+            let { error } = await _supabase.from('Kematian').update({
+                nama: nama, tanggal_wafat: tanggal, usia: usia, keterangan: sebab, dusun: dusun
+            }).eq('id', idEditAktif);
+            
+            if (error) { alert("Gagal mengupdate data: " + error.message); } 
+            else { alert("Perubahan data berhasil disimpan!"); }
+        }
+
+        document.getElementById('btnSimpanForm').innerText = 'Simpan Data';
+        tutupFormModalBtn();
+        muatDataDariSupabase(); // Muat ulang data terbaru
+    }
+</script>
+
+</body>
+</html>

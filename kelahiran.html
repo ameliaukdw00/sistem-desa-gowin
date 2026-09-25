@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ringkasan Data Kelahiran — Desa Gondang Winangun</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Pustaka JavaScript Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .detail-container { max-width: 1180px; margin: 40px auto; padding: 0 20px; }
+        .summary-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .summary-card { background: #ffffff; border: 1px solid var(--line); border-radius: 14px; padding: 20px; box-shadow: 0 6px 20px -10px rgba(18, 35, 63, 0.06); text-align: center; }
+        .summary-card b { display: block; font-size: 28px; font-family: var(--font-display); color: var(--navy); margin-bottom: 5px; }
+        .summary-card span { font-size: 13.5px; color: #525c73; font-weight: 500; }
+        .table-box { background: #ffffff; border: 1px solid var(--line); border-radius: 18px; padding: 30px; box-shadow: 0 10px 30px -15px rgba(18, 35, 63, 0.08); overflow-x: auto; }
+        table.data-table { width: 100%; border-collapse: collapse; text-align: left; margin-top: 10px; }
+        table.data-table th { background-color: var(--navy); color: #ffffff; padding: 14px 16px; font-size: 14px; font-family: var(--font-display); }
+        table.data-table td { padding: 14px 16px; border-bottom: 1px solid var(--line); font-size: 14px; color: var(--ink); vertical-align: middle; }
+    </style>
+</head>
+<body style="background-color: #f4f6f9;">
+
+<header>
+    <nav>
+        <a href="index.html" class="logo">
+            <img src="logo-ngadirejo.jpg" alt="Logo Desa" class="logo-desa">
+            <span>GOWIN<small>Data &amp; Profil Desa</small></span>
+        </a>
+        <div class="nav-links">
+            <a href="index.html" style="color: var(--blue); font-weight: 600;">← Kembali ke Beranda</a>
+        </div>
+    </nav>
+</header>
+
+<div class="detail-container">
+    
+    <div class="section-head" style="margin-bottom: 25px;">
+        <div class="eyebrow" style="color: var(--blue); font-weight: 700; letter-spacing: 0.1em; margin-bottom: 8px; text-transform: uppercase; font-size: 12px;">Kategori: Kelahiran</div>
+        <h2 style="font-family: var(--font-display); font-size: 32px; color: var(--navy); margin-bottom: 8px;">Ringkasan Data Kelahiran Warga</h2>
+        <p style="color: #525c73; font-size: 15px;">Rekapitulasi pencatatan bayi lahir per dusun di Desa Gondang Winangun dari database Supabase.</p>
+    </div>
+
+    <!-- Kotak Angka Ringkasan Cepat (Summary Cards) -->
+    <div class="summary-row">
+        <div class="summary-card">
+            <b id="totalLahir">0</b>
+            <span>Total Kelahiran Tahun Ini</span>
+        </div>
+        <div class="summary-card">
+            <b id="totalLaki">0</b>
+            <span>Bayi Laki-laki</span>
+        </div>
+        <div class="summary-card">
+            <b id="totalPerempuan">0</b>
+            <span>Bayi Perempuan</span>
+        </div>
+        <div class="summary-card">
+            <b>9 Dusun</b>
+            <span>Wilayah Pelaporan</span>
+        </div>
+    </div>
+
+    <!-- Tabel Rincian -->
+    <div class="table-box">
+        <h3 style="font-family: var(--font-display); font-size: 18px; color: var(--navy); margin-bottom: 15px;">Rekap Kelahiran per Dusun</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="width: 70px;">No</th>
+                    <th>Nama Dusun</th>
+                    <th>Jumlah Bayi Lahir</th>
+                    <th>Laki-laki</th>
+                    <th>Perempuan</th>
+                </tr>
+            </thead>
+            <tbody id="tabelKelahiranBody">
+                <tr><td colspan="5" style="text-align:center; color:#525c73; font-style:italic;">Memuat data dari Supabase...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+    // Konfigurasi Supabase Anda
+    const SUPABASE_URL = 'https://ktqtxtjjghvpurlxclwp.supabase.co';
+    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_RXYccBhx7piFKdpWXxpDgg_5ZM24L-m';
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+    const daftarDusunResmi = [
+        "Gandu", "Carikan", "Klurak", "Gamblok", 
+        "Kejawan", "Pancas", "Kedawung", "Kaligalang", "Karangrejo"
+    ];
+
+    async function muatDataKelahiran() {
+        // Mengambil data dari tabel 'kelahiran' di Supabase. 
+        // Pastikan Anda sudah membuat tabel 'kelahiran' dengan kolom: dusun, jenis_kelamin (L/P)
+        let { data, error } = await _supabase.from('kelahiran').select('*');
+        
+        const tbody = document.getElementById('tabelKelahiranBody');
+        tbody.innerHTML = '';
+
+        let totalSemua = 0;
+        let totalLaki = 0;
+        let totalPerempuan = 0;
+
+        // Jika tabel belum dibuat atau kosong, kita tampilkan 0 agar halaman tetap rapi dan tidak error
+        let dataKelahiran = (!error && data) ? data : [];
+
+        daftarDusunResmi.forEach((dusun, index) => {
+            // Filter data berdasarkan dusun
+            const wargaDusun = dataKelahiran.filter(item => String(item.dusun || '').trim().toUpperCase() === dusun.toUpperCase());
+            const jmlLaki = wargaDusun.filter(item => String(item.jenis_kelamin || '').trim().toUpperCase() === 'L').length;
+            const jmlPerempuan = wargaDusun.filter(item => String(item.jenis_kelamin || '').trim().toUpperCase() === 'P').length;
+            const jmlTotal = wargaDusun.length;
+
+            totalSemua += jmlTotal;
+            totalLaki += jmlLaki;
+            totalPerempuan += jmlPerempuan;
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${(index + 1).toString().padStart(2, '0')}</td>
+                <td>Dusun ${dusun}</td>
+                <td><b>${jmlTotal}</b></td>
+                <td>${jmlLaki}</td>
+                <td>${jmlPerempuan}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        // Perbarui kartu ringkasan di atas
+        document.getElementById('totalLahir').innerText = totalSemua;
+        document.getElementById('totalLaki').innerText = totalLaki;
+        document.getElementById('totalPerempuan').innerText = totalPerempuan;
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        muatDataKelahiran();
+    });
+</script>
+
+</body>
+</html>

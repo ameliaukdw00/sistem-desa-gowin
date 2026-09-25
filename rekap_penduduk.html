@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rekapitulasi Data Penduduk Per Dusun — Desa Gondang Winangun</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Pustaka JavaScript Supabase -->
+    <script src="hhttps://ktqtxtjjghvpyrlxclwp.supabase.co"></script>
+    <style>
+        .rekap-container { max-width: 1180px; margin: 40px auto; padding: 0 20px; }
+        .rekap-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 30px; }
+        .rekap-card { background: #ffffff; border: 1.5px solid var(--line); border-radius: 16px; padding: 25px; box-shadow: 0 10px 30px -15px rgba(18, 35, 63, 0.08); display: flex; justify-content: space-between; align-items: center; }
+        .rekap-card h3 { font-family: var(--font-display); font-size: 20px; color: var(--navy); margin: 0 0 5px; }
+        .rekap-card p { font-size: 13px; color: #525c73; margin: 0; }
+        .rekap-card .angka { font-family: var(--font-display); font-size: 28px; font-weight: 700; color: var(--navy); background: #f4f6f9; padding: 10px 20px; border-radius: 12px; border: 1px solid var(--line); }
+        .btn-buka { display: inline-block; margin-top: 10px; font-size: 12.5px; font-weight: 600; color: var(--blue); text-decoration: none; }
+        .btn-buka:hover { text-decoration: underline; }
+    </style>
+</head>
+<body style="background-color: #f4f6f9;">
+
+<header>
+    <nav>
+        <a href="index.html" class="logo">
+            <span>GOWIN<small>Data &amp; Profil Desa</small></span>
+        </a>
+        <div class="nav-links">
+            <a href="index.html" style="color: var(--blue); font-weight: 600;">← Kembali ke Beranda</a>
+        </div>
+    </nav>
+</header>
+
+<div class="rekap-container">
+    <div class="section-head" style="margin-bottom: 20px;">
+        <h2 style="font-family: var(--font-display); font-size: 30px; color: var(--navy); margin-bottom: 8px;">Rekapitulasi Total KK Per Dusun</h2>
+        <p style="color: #525c73; font-size: 15px;">Jumlah Kepala Keluarga di seluruh wilayah Desa Gondang Winangun yang dihitung otomatis dari database Supabase.</p>
+    </div>
+
+    <!-- Kotak Hasil Rekap Per Dusun Dimuat Otomatis di Sini -->
+    <div id="gridRekapDusun" class="rekap-grid">
+        <p style="color: #525c73; font-style: italic;">Sedang menghitung data rekapitulasi dari database Supabase...</p>
+    </div>
+</div>
+
+<script>
+    // Konfigurasi Supabase Anda
+    const SUPABASE_URL = 'https://ktqtxtjjghvpyrlxclwp.supabase.co';
+    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_RXYccBhx7piFKdpWXxpDgg_5ZM24L-m';
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+    // 9 Dusun Resmi Desa Gondang Winangun
+    const daftarDusunResmi = [
+        "Gandu", "Carikan", "Klurak", "Gamblok", 
+        "Kejawan", "Pancas", "Kedawung", "Kaligalang", "Karangrejo"
+    ];
+
+    async function muatRekapSupabase() {
+        // Ambil seluruh data penduduk dari tabel 'Penduduk' di Supabase
+        let { data: dataWarga, error } = await _supabase.from('Penduduk').select('*');
+        const container = document.getElementById('gridRekapDusun');
+        container.innerHTML = '';
+
+        if (error || !dataWarga) {
+            container.innerHTML = `<p style="color: #dc3545; font-weight: 600;">Gagal memuat rekapitulasi dari database Supabase.</p>`;
+            console.error(error);
+            return;
+        }
+
+        daftarDusunResmi.forEach((dusun, index) => {
+            // Hitung jumlah KK yang sesuai dengan nama dusun dan memiliki nama warga
+            const jumlahKK = dataWarga.filter(w => {
+                const namaVal = w.nama ? w.nama.trim() : '-';
+                const dusunVal = w.dusun ? w.dusun.trim().toUpperCase() : '';
+                return dusunVal === dusun.toUpperCase() && namaVal !== '-';
+            }).length;
+
+            // Buat kartu rekap untuk setiap dusun
+            const card = document.createElement('div');
+            card.className = 'rekap-card';
+            card.innerHTML = `
+                <div>
+                    <span style="font-size: 11px; font-weight: 700; color: var(--blue);">DUSUN 0${index + 1}</span>
+                    <h3>Dusun ${dusun}</h3>
+                    <p>Total Warga / Kepala Keluarga</p>
+                    <a href="penduduk.html?dusun=${encodeURIComponent(dusun)}" class="btn-buka">Lihat Daftar Warga &rarr;</a>
+                </div>
+                <div class="angka">${jumlahKK} <span style="font-size: 13px; font-weight: normal; color: #525c73;">KK</span></div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        muatRekapSupabase();
+    });
+</script>
+
+</body>
+</html>

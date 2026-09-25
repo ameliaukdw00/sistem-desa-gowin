@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beranda — Data Penduduk Desa Gondang Winangun</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Pustaka JavaScript Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .map-container-wrapper { position: relative; width: 100%; height: 480px; border-radius: 16px; overflow: hidden; border: 2px solid var(--line); box-shadow: 0 10px 30px -15px rgba(18, 35, 63, 0.15); margin-top: 20px; margin-bottom: 25px; background: #000; }
+        .map-overlay-banner {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(18, 35, 63, 0.45); backdrop-filter: blur(2px);
+            z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer; transition: opacity 0.3s ease; text-align: center; padding: 20px;
+        }
+        .map-overlay-banner h4 { color: #ffffff; font-family: var(--font-display); font-size: 20px; margin: 0 0 8px; }
+        .map-overlay-banner p { color: #ffffff; font-size: 13.5px; margin: 0 0 15px; opacity: 0.9; }
+        .map-overlay-banner .btn-aktifkan { background: var(--gold); color: var(--navy); padding: 10px 20px; border-radius: 8px; font-weight: 700; font-size: 14px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.2); cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<header>
+    <nav>
+        <a href="#" class="logo">
+            <img src="logo-ngadirejo.jpg" alt="Logo Desa" class="logo-desa">
+            <span>GOWIN<small>Data &amp; Profil Desa</small></span>
+        </a>
+        <div class="nav-links">
+            <a href="#beranda" class="active">Beranda</a>
+            <a href="#dusun">Rekapitulasi Desa</a>
+            <a href="#data">Data Desa</a>
+            <a href="profil.html">Profil Desa</a>
+            <a href="admin.html" style="color: var(--gold);">Admin</a>
+        </div>
+        <div class="nav-right" style="display:flex;align-items:center;gap:14px;">
+            <button class="menu-toggle" aria-label="Buka menu">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M3 12h18M3 18h18" stroke="#12233f" stroke-width="2" stroke-linecap="round"/></svg>
+            </button>
+        </div>
+    </nav>
+</header>
+
+<section class="hero" id="beranda">
+    <div class="hero-media">
+        <div class="scrim"></div>
+        <div class="hero-content">
+            <div class="eyebrow">KECAMATAN NGADIREJO, TEMANGGUNG</div>
+            <h1>Data Penduduk Desa Gondang Winangun</h1>
+            <p>Satu pintu untuk data kependudukan, sosial, dan bantuan warga Desa Gondang Winangun — terbuka, mudah diakses, dan diperbarui dari sembilan dusun.</p>
+            <div class="hero-actions">
+                <a href="#data" class="btn btn-gold">Lihat Data Desa</a>
+                <a href="#dusun" class="btn btn-outline-light">Lihat 9 Dusun</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section dusun-section" id="dusun">
+    <div class="wrap">
+        <div class="section-head">
+            <div class="eyebrow">WILAYAH & STATISTIK WARGA</div>
+            <h2>Peta Geospasial & Rekapitulasi Data Dusun</h2>
+            <p>Jelajahi sebaran wilayah 9 dusun serta akses lengkap data kependudukan, kemiskinan, pendidikan, hingga bantuan sosial warga.</p>
+
+            <div class="map-container-wrapper">
+                <div id="mapOverlay" class="map-overlay-banner" onclick="bukaPeta()">
+                    <h4>🗺️ Peta Interaktif Desa</h4>
+                    <p>Sentuh tombol di bawah untuk mulai menggeser atau melihat titik peta</p>
+                    <button class="btn-aktifkan">Sentuh untuk Mengaktifkan Peta</button>
+                </div>
+                <div id="mapTitle" style="position: absolute; top: 16px; left: 50%; transform: translateX(-50%); z-index: 5; background: rgba(255, 255, 255, 0.92); padding: 8px 24px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.15); box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; pointer-events: none;">
+                    <span style="font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--navy); letter-spacing: 0.02em;">Geospasial Desa Gondang Winangun</span>
+                </div>
+                <iframe id="desakuMap" src="https://maps.google.com/maps?q=Gondangwinangun,+Ngadirejo,+Temanggung&t=k&z=14&output=embed" width="100%" height="480" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            </div>
+        </div>
+
+        <div class="dusun-grid">
+            <div class="dusun-chip" onclick="pilihDusun('Gandu')" style="cursor:pointer;"><div class="d-num">01</div><div class="d-name">Gandu</div></div>
+            <div class="dusun-chip" onclick="pilihDusun('Carikan')" style="cursor:pointer;"><div class="d-num">02</div><div class="d-name">Carikan</div></div>
+            <div class="dusun-chip" onclick="pilihDusun('Klurak')" style="cursor:pointer;"><div class="d-num">03</div><div class="d-name">Klurak</div></div>
+            <div class="dusun-chip" onclick="pilihDusun('Gamblok')" style="cursor:pointer;"><div class="d-num">04</div><div class="d-name">Gamblok</div></div>
+            <div class="dusun-chip" onclick="pilihDusun('Kejawan')" style="cursor:pointer;"><div class="d-num">05</div><div class="d-name">Kejawan</div></div>
+            <div class="dusun-chip" onclick="pilihDusun('Pancas')" style="cursor:pointer;"><div class="d-num">06</div><div class="d-name">Pancas</div></div>
+            <div class="dusun-chip" onclick="pilihDusun('Kedawung')" style="cursor:pointer;"><div class="d-num">07</div><div class="d-name">Kedawung</div></div>
+            <div class="dusun-chip" onclick="pilihDusun('Kaligalang')" style="cursor:pointer;"><div class="d-num">08</div><div class="d-name">Kaligalang</div></div>
+            <div class="dusun-chip" onclick="pilihDusun('Karangrejo')" style="cursor:pointer;"><div class="d-num">09</div><div class="d-name">Karangrejo</div></div>
+        </div>
+        <div class="dusun-note">// Klik salah satu dusun di atas untuk melihat titik wilayah pada peta sekaligus membuka data kependudukannya</div>
+    </div>
+</section>
+
+<section class="section" id="data">
+    <div class="wrap">
+        <div class="section-head">
+            <div class="eyebrow">Data Desa</div>
+            <h2>Kategori data warga</h2>
+        </div>
+        <div class="data-grid">
+            <div class="data-card"><h3>Data Penduduk</h3><a href="detail_kategori.html?kat=penduduk" class="data-link">Lihat detail</a></div>
+            <div class="data-card"><h3>Data Kelahiran</h3><a href="kelahiran.html" class="data-link">Lihat detail</a></div>
+            <div class="data-card"><h3>Data Kematian</h3><a href="kematian.html" class="data-link">Lihat detail</a></div>
+            <div class="data-card"><h3>Data Kemiskinan</h3><a href="kemiskinan.html" class="data-link">Lihat detail</a></div>
+            <div class="data-card"><h3>Data Pendidikan</h3><a href="pendidikan.html" class="data-link">Lihat detail</a></div>
+            <div class="data-card"><h3>Data Kepemilikan Rumah</h3><a href="rumah.html" class="data-link">Lihat detail</a></div>
+            <div class="data-card"><h3>Data Bantuan</h3><a href="bantuan.html" class="data-link">Lihat detail</a></div>
+            <div class="data-card" style="cursor: pointer;" onclick="window.location.href='pamsimas.html'">
+                <h3 style="color: var(--navy);">Tagihan Pamsimas</h3>
+                <p>Cek daftar tagihan air bulanan warga.</p>
+                <span class="data-link" style="color: var(--blue);">Lihat Daftar Tagihan &rarr;</span>
+            </div>
+            <div class="data-card" style="cursor: pointer;" onclick="window.location.href='sampah.html'">
+                <h3 style="color: var(--navy);">Tagihan Sampah</h3>
+                <p>Cek daftar iuran sampah bulanan warga.</p>
+                <span class="data-link" style="color: var(--blue);">Lihat Daftar Sampah &rarr;</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer style="margin-top: 60px; background-color: var(--navy); color: #ffffff; padding: 50px 0 20px 0; border-top: 4px solid var(--gold);">
+    <div class="wrap" style="max-width: 1180px; margin: 0 auto; padding: 0 20px;">
+        <div class="footer-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 40px; margin-bottom: 40px;">
+            <div>
+                <a href="#" class="logo" style="display: flex; align-items: center; gap: 12px; text-decoration: none; margin-bottom: 14px;">
+                    <img src="logo-ngadirejo.jpg" alt="Logo Desa" class="logo-gambar" style="width: 40px; height: 40px; object-fit: contain;">
+                    <span style="color: #ffffff; font-family: var(--font-display); font-size: 16px; font-weight: 700;">Desa Gondang Winangun<small style="display: block; font-size: 11px; color: var(--gold); font-weight: normal;">Kecamatan Ngadirejo, Kabupaten Temanggung</small></span>
+                </a>
+                <p style="font-size: 13.5px; color: rgba(255,255,255,0.8); line-height: 1.6; margin-top: 14px;">
+                    Dikembangkan sebagai bagian dari program Desa Gondang Winangun, Kecamatan Ngadirejo, Kabupaten Temanggung.
+                </p>
+            </div>
+            <div>
+                <h4 style="color: var(--gold); font-size: 14px; font-family: var(--font-display); letter-spacing: 0.05em; margin-bottom: 16px; text-transform: uppercase;">Data Desa</h4>
+                <ul class="footer-links-grid">
+                    <li><a href="detail_kategori.html?kat=penduduk" style="color: rgba(255,255,255,0.85); text-decoration: none; font-size: 13.5px;">Data Penduduk</a></li>
+                    <li><a href="kelahiran.html" style="color: rgba(255,255,255,0.85); text-decoration: none; font-size: 13.5px;">Data Kelahiran</a></li>
+                    <li><a href="kematian.html" style="color: rgba(255,255,255,0.85); text-decoration: none; font-size: 13.5px;">Data Kematian</a></li>
+                    <li><a href="kemiskinan.html" style="color: rgba(255,255,255,0.85); text-decoration: none; font-size: 13.5px;">Data Kemiskinan</a></li>
+                    <li><a href="pendidikan.html" style="color: rgba(255,255,255,0.85); text-decoration: none; font-size: 13.5px;">Data Pendidikan</a></li>
+                    <li><a href="rumah.html" style="color: rgba(255,255,255,0.85); text-decoration: none; font-size: 13.5px;">Data Rumah</a></li>
+                    <li><a href="bantuan.html" style="color: rgba(255,255,255,0.85); text-decoration: none; font-size: 13.5px;">Data Bantuan</a></li>
+                    <li><a href="pamsimas.html" style="color: rgba(255,255,255,0.85); text-decoration: none; font-size: 13.5px;">Tagihan Pamsimas</a></li>
+                    <li><a href="sampah.html" style="color: rgba(255,255,255,0.85); text-decoration: none; font-size: 13.5px;">Tagihan Sampah</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 style="color: var(--gold); font-size: 14px; font-family: var(--font-display); letter-spacing: 0.05em; margin-bottom: 16px; text-transform: uppercase;">Tautan</h4>
+                <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px;">
+                    <li><a href="profil.html" style="color: rgba(255,255,255,0.85); text-decoration: none; font-size: 13.5px;">Tentang Desa</a></li>
+                    <li><a href="admin.html" style="color: rgba(255,255,255,0.85); text-decoration: none; font-size: 13.5px;">Admin Panel</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom" style="border-top: 1px solid rgba(255,255,255,0.15); padding-top: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 13px; color: rgba(255,255,255,0.7);">
+            <span>© 2026 Portal Data Desa Gondang Winangun</span>
+            <span>Data Penduduk Desa 2026</span>
+        </div>
+    </div>
+</footer>
+
+<script>
+    // Konfigurasi Koneksi Supabase
+    const SUPABASE_URL = 'https://ktqtxtjjghvpyrlxclwp.supabase.co';
+    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_RXYccBhx7piFKdpWXxpDgg_5ZM24L-m';
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+    document.querySelector('.menu-toggle').addEventListener('click', () => {
+        const navLinks = document.querySelector('.nav-links');
+        navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
+    });
+
+    function bukaPeta() { 
+        document.getElementById('mapOverlay').style.display = 'none'; 
+    }
+
+    function pilihDusun(namaDusun) { 
+        window.location.href = `penduduk.html?dusun=${encodeURIComponent(namaDusun)}`; 
+    }
+</script>
+</body>
+</html>

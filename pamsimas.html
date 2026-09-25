@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tagihan Pamsimas Warga — Desa Gondang Winangun</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Pustaka JavaScript Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .detail-container { max-width: 1180px; margin: 40px auto; padding: 0 20px; }
+        .table-box { background: #ffffff; border: 1.5px solid var(--line); border-radius: 18px; padding: 30px; box-shadow: 0 10px 30px -15px rgba(18, 35, 63, 0.08); overflow-x: auto; }
+        .top-action-row { display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; }
+        .rt-filter-row { display: flex; gap: 10px; flex-wrap: wrap; }
+        .filter-btn { padding: 8px 16px; background: #ffffff; border: 1.5px solid var(--line); border-radius: 8px; font-weight: 600; font-size: 13px; color: var(--navy); cursor: pointer; transition: all 0.2s; }
+        .filter-btn:hover, .filter-btn.active { background: var(--navy); color: #ffffff; border-color: var(--navy); }
+        
+        .rt-container { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 25px; align-items: center; background: #ffffff; padding: 15px 20px; border-radius: 12px; border: 1.5px solid var(--line); box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        .rt-label { font-size: 13px; font-weight: 700; color: var(--navy); margin-right: 5px; letter-spacing: 0.05em; }
+        
+        .rt-btn { padding: 8px 18px; background: #ffffff; border: 1.5px solid var(--line); border-radius: 8px; font-size: 13px; font-weight: 700; color: var(--navy); cursor: pointer; transition: all 0.2s; }
+        .rt-btn:hover { border-color: var(--navy); }
+        .rt-btn.active { background: var(--navy); color: #ffffff; border-color: var(--navy); }
+
+        .search-box { padding: 8px 16px; border: 1.5px solid var(--line); border-radius: 8px; font-size: 13px; outline: none; width: 240px; }
+        .search-box:focus { border-color: var(--blue); }
+
+        table.data-table { width: 100%; border-collapse: collapse; text-align: left; margin-top: 10px; }
+        table.data-table th { background-color: var(--navy); color: #ffffff; padding: 14px 16px; font-size: 14px; font-family: var(--font-display); }
+        table.data-table td { padding: 14px 16px; border-bottom: 1px solid var(--line); font-size: 14px; color: var(--ink); vertical-align: middle; }
+        table.data-table tr:hover { background-color: #f8f9fc; }
+        .btn-detail-link { background: #eef2f7; color: var(--blue); padding: 6px 14px; border-radius: 6px; font-size: 12.5px; font-weight: 600; border: none; cursor: pointer; }
+        .btn-detail-link:hover { background: var(--blue); color: #fff; }
+        
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
+        .modal-content { background: #ffffff; padding: 30px; border-radius: 16px; max-width: 500px; width: 95%; text-align: left; position: relative; }
+        .close-btn { position: absolute; top: 15px; right: 20px; background: none; border: none; font-size: 22px; font-weight: bold; cursor: pointer; color: #525c73; }
+        .admin-only { display: none; }
+    </style>
+</head>
+<body style="background-color: #f4f6f9;">
+
+<header>
+    <nav>
+        <a href="index.html" class="logo">
+            <span>GOWIN<small>Data &amp; Profil Desa</small></span>
+        </a>
+        <div class="nav-links">
+            <a href="index.html" style="color: var(--blue); font-weight: 600;">← Kembali ke Beranda</a>
+        </div>
+    </nav>
+</header>
+
+<div class="detail-container">
+    <div class="section-head" style="margin-bottom: 30px;">
+        <h2 style="font-family: var(--font-display); font-size: 32px; color: var(--navy); margin-bottom: 10px;">Cek Tagihan Pamsimas Warga</h2>
+        <p style="color: #525c73; font-size: 15px;">Pilih dusun dan RT atau cari nama kepala keluarga untuk melihat rincian pemakaian dan tagihan air.</p>
+    </div>
+
+    <!-- Tombol Pilihan Dusun -->
+    <div class="top-action-row">
+        <div class="rt-filter-row" id="dusunFilterContainer"></div>
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <input type="text" id="searchInput" class="search-box" placeholder="Cari nama kepala keluarga..." onkeyup="cariTagihan()">
+        </div>
+    </div>
+
+    <!-- Tombol Pilihan RT -->
+    <div class="rt-container" id="rtFilterContainer">
+        <span class="rt-label">PILIH RT:</span>
+    </div>
+
+    <div class="table-box">
+        <h3 id="tabelJudul" style="font-family: var(--font-display); font-size: 18px; color: var(--navy); margin-bottom: 15px;">Daftar Tagihan Air Warga</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Nama Kepala Keluarga</th>
+                    <th>Dusun / RT</th>
+                    <th>Meteran (m³)</th>
+                    <th>Total Tagihan</th>
+                    <th style="text-align: right; width: 130px;">Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="tabelTagihan">
+                <tr><td colspan="5" style="text-align:center; color:#525c73; font-style:italic;">Memuat data dari Supabase...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- MODAL RINCIAN -->
+<div id="pamsimasModal" class="modal-overlay" onclick="tutupModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <button class="close-btn" onclick="tutupModalBtn()">&times;</button>
+        <h3 id="mNamaWarga" style="font-family: var(--font-display); font-size: 19px; color: var(--navy); margin-bottom: 15px;">Rincian Tagihan</h3>
+        
+        <div style="font-size: 14px; color: #525c73; display: flex; flex-direction: column; gap: 10px;">
+            <div><b>Dusun / RT:</b> <span id="mDusunRt">-</span></div>
+            <div><b>Meteran Air (m³):</b> <span id="mValMeteran">-</span></div>
+            <div><b>Status Pembayaran:</b> <span id="mStatusBayar" style="font-weight: 700; padding: 3px 10px; border-radius: 6px;">-</span></div>
+            
+            <div class="admin-only" style="background: #fdfbf7; padding: 12px; border: 1.5px dashed var(--gold); border-radius: 8px; margin-top: 10px;">
+                <label style="font-weight: 700; color: var(--navy); font-size: 12px; display: block; margin-bottom: 5px;">INPUT METERAN BARU (KHUSUS ADMIN):</label>
+                <input type="number" id="editMeteran" style="width: 100%; padding: 8px; border: 1.5px solid var(--line); border-radius: 6px; box-sizing: border-box;" placeholder="Masukkan angka meteran m³...">
+                <button onclick="simpanMeteranAdmin()" style="margin-top: 10px; width: 100%; background: #28a745; color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: 700; cursor: pointer;">Hitung & Simpan Tagihan</button>
+            </div>
+
+            <hr style="border: none; border-top: 1px solid var(--line); margin: 10px 0;">
+            <div style="font-size: 16px; font-weight: bold; color: var(--navy);">Total Tagihan Harus Dibayar: <span id="mTotalBayar" style="color: #c5221f;">Rp 0</span></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Konfigurasi Koneksi Supabase
+    const SUPABASE_URL = 'https://ktqtxtjjghvpurlxclwp.supabase.co';
+    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_RXYccBhx7piFKdpWXxpDgg_5ZM24L-m';
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+    let semuaDataWarga = []; // Data master penduduk dari tabel Supabase 'Penduduk'
+    let pamsimasCloudData = []; // Data tagihan dari tabel Supabase 'tagihan_pamsimas'
+    let dusunAktif = 'GAMBLOK';
+    let rtAktif = '';
+
+    // Rumus Tarif Pamsimas
+    function hitungTarifPamsimas(m3) {
+        let pemakaian = parseFloat(m3) || 0;
+        if (pemakaian === 0) return 0;
+
+        let tarifAir = 0;
+        let beban = 5000;
+
+        if (pemakaian <= 10) {
+            tarifAir = 1000;
+        } else if (pemakaian <= 20) {
+            tarifAir = 2000;
+        } else {
+            tarifAir = 5000;
+        }
+        return tarifAir + beban;
+    }
+
+    function formatRupiah(angka) { return "Rp " + angka.toLocaleString('id-ID'); }
+
+    // Ambil data dari tabel Supabase 'Penduduk' dan 'tagihan_pamsimas'
+    async function initDataPamsimas() {
+        // 1. Ambil data master penduduk
+        let resPenduduk = await _supabase.from('Penduduk').select('*');
+        if (!resPenduduk.error && resPenduduk.data) {
+            semuaDataWarga = resPenduduk.data;
+        }
+
+        // 2. Ambil data tagihan Pamsimas
+        let resTagihan = await _supabase.from('tagihan_pamsimas').select('*');
+        if (!resTagihan.error && resTagihan.data) {
+            pamsimasCloudData = resTagihan.data;
+        }
+
+        inisialisasiFilterDusun();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        initDataPamsimas();
+
+        const isAdmin = localStorage.getItem('kadus_login') === 'true';
+        document.querySelectorAll('.admin-only').forEach(el => el.style.display = isAdmin ? 'block' : 'none');
+    });
+
+    const daftarDusun = ['GAMBLOK', 'KEDAWUNG', 'GANDU', 'CARIKAN', 'KLURAK', 'KEJAWAN', 'PANCAS', 'KALIGALANG', 'KARANGREJO'];
+
+    function inisialisasiFilterDusun() {
+        const container = document.getElementById('dusunFilterContainer');
+        container.innerHTML = '';
+        daftarDusun.forEach((d, idx) => {
+            const btn = document.createElement('button');
+            btn.className = `filter-btn ${idx === 0 ? 'active' : ''}`;
+            btn.innerText = d;
+            btn.onclick = () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                dusunAktif = d;
+                document.getElementById('searchInput').value = '';
+                buatFilterRT(dusunAktif);
+            };
+            container.appendChild(btn);
+        });
+        buatFilterRT(dusunAktif);
+    }
+
+    function buatFilterRT(dusun) {
+        const rtContainer = document.getElementById('rtFilterContainer');
+        rtContainer.innerHTML = '<span class="rt-label">PILIH RT:</span>';
+
+        let listRT = new Set();
+        semuaDataWarga.forEach(w => {
+            let d = String(w.dusun || '').trim().toUpperCase();
+            if (d === dusun) {
+                let rtVal = String(w.rt || '').trim();
+                if (rtVal && rtVal !== '-') {
+                    let cleanRt = rtVal.replace(/rt/gi, '').trim();
+                    listRT.add(cleanRt);
+                }
+            }
+        });
+
+        let sortedRT = Array.from(listRT).sort((a, b) => a.localeCompare(b, undefined, {numeric: true}));
+        rtAktif = sortedRT.length > 0 ? sortedRT[0] : '';
+
+        sortedRT.forEach((rt, idx) => {
+            let btnRt = document.createElement('button');
+            btnRt.className = `rt-btn ${idx === 0 ? 'active' : ''}`;
+            let nomorRtPadded = rt.padStart(2, '0');
+            btnRt.innerText = 'RT ' + nomorRtPadded;
+            
+            btnRt.onclick = () => {
+                document.querySelectorAll('.rt-btn').forEach(b => b.classList.remove('active'));
+                btnRt.classList.add('active');
+                rtAktif = rt;
+                tampilkanDataDusun(dusunAktif, rtAktif);
+            };
+            rtContainer.appendChild(btnRt);
+        });
+
+        if (rtAktif) {
+            tampilkanDataDusun(dusunAktif, rtAktif);
+        } else {
+            renderTabel([], `Daftar Tagihan Pamsimas - Dusun ${dusun}`);
+        }
+    }
+
+    function tampilkanDataDusun(dusun, rt) {
+        const filtered = semuaDataWarga.filter(w => {
+            let d = String(w.dusun || '').trim().toUpperCase();
+            let r = String(w.rt || '').trim().replace(/rt/gi, '').trim();
+            let nama = w.nama;
+            
+            let cocokDusun = (d === dusun);
+            let cocokRt = (r === rt);
+            let adaNama = (nama && nama !== '-');
+
+            return cocokDusun && cocokRt && adaNama;
+        });
+
+        renderTabel(filtered, `Daftar Tagihan Pamsimas - Dusun ${dusun} (RT ${rt.padStart(2, '0')})`);
+    }
+
+    function cariTagihan() {
+        const keyword = document.getElementById('searchInput').value.toLowerCase();
+        const filtered = semuaDataWarga.filter(w => {
+            let d = String(w.dusun || '').trim().toUpperCase();
+            let r = String(w.rt || '').trim().replace(/rt/gi, '').trim();
+            let nama = String(w.nama || '').toLowerCase();
+
+            let cocokDusun = (d === dusunAktif);
+            let cocokRt = (r === rtAktif);
+            let cocokNama = nama.includes(keyword);
+
+            return cocokDusun && cocokRt && cocokNama;
+        });
+        renderTabel(filtered, `Hasil Pencarian di Dusun ${dusunAktif} (RT ${rtAktif.padStart(2, '0')})`);
+    }
+
+    function renderTabel(data, judul) {
+        const tbody = document.getElementById('tabelTagihan');
+        tbody.innerHTML = '';
+        document.getElementById('tabelJudul').innerText = judul;
+
+        if (data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#525c73; font-style:italic;">Tidak ada data tagihan ditemukan.</td></tr>`;
+            return;
+        }
+
+        data.forEach((w) => {
+            let indexAsli = semuaDataWarga.indexOf(w);
+            let nama = w.nama;
+            
+            let foundCloud = pamsimasCloudData.find(item => item.nama_warga === nama);
+            let savedMeteran = foundCloud ? foundCloud.meteran : 0;
+
+            let totalTagihan = hitungTarifPamsimas(savedMeteran);
+            let rtAsli = String(w.rt || '').trim().replace(/rt/gi, '').trim();
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong onclick="bukaModalPamsimas(${indexAsli})" style="cursor:pointer; color:var(--navy);">${nama}</strong></td>
+                <td>${w.dusun} (RT ${rtAsli.padStart(2, '0')})</td>
+                <td>${savedMeteran} m³</td>
+                <td><span style="color:#c5221f; font-weight:600;">${formatRupiah(totalTagihan)}</span></td>
+                <td style="text-align:right;"><button class="btn-detail-link" onclick="bukaModalPamsimas(${indexAsli})">Cek Rincian</button></td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    let namaWargaAktif = "";
+    function bukaModalPamsimas(index) {
+        let w = semuaDataWarga[index];
+        namaWargaAktif = w.nama;
+
+        let foundCloud = pamsimasCloudData.find(item => item.nama_warga === namaWargaAktif);
+        let meteran = foundCloud ? foundCloud.meteran : 0;
+        let status = foundCloud ? foundCloud.status_pembayaran : 'Belum Lunas';
+
+        let rtAsli = String(w.rt || '').trim().replace(/rt/gi, '').trim();
+
+        document.getElementById('mNamaWarga').innerText = "Tagihan Air: " + namaWargaAktif;
+        document.getElementById('mDusunRt').innerText = `${w.dusun} - RT ${rtAsli.padStart(2, '0')}`;
+        document.getElementById('mValMeteran').innerText = meteran + " m³";
+        
+        let spanStatus = document.getElementById('mStatusBayar');
+        spanStatus.innerText = status;
+        spanStatus.style.backgroundColor = (status === 'Lunas') ? '#e6f4ea' : '#fce8e6';
+        spanStatus.style.color = (status === 'Lunas') ? '#137333' : '#c5221f';
+
+        document.getElementById('mTotalBayar').innerText = formatRupiah(hitungTarifPamsimas(meteran));
+        document.getElementById('editMeteran').value = meteran;
+
+        document.querySelectorAll('.admin-only').forEach(el => el.style.display = (localStorage.getItem('kadus_login') === 'true') ? 'block' : 'none');
+        document.getElementById('pamsimasModal').style.display = 'flex';
+    }
+
+    // Fungsi simpan meteran admin langsung memperbarui tabel Supabase 'tagihan_pamsimas'
+    async function simpanMeteranAdmin() {
+        let nilaiBaru = parseFloat(document.getElementById('editMeteran').value) || 0;
+
+        let found = pamsimasCloudData.find(item => item.nama_warga === namaWargaAktif);
+        let statusKini = found ? found.status_pembayaran : 'Belum Lunas';
+
+        if (found) {
+            let { error } = await _supabase.from('tagihan_pamsimas').update({ meteran: nilaiBaru }).eq('nama_warga', namaWargaAktif);
+            if (error) {
+                alert("Gagal memperbarui ke Supabase: " + error.message);
+                return;
+            }
+        } else {
+            let { error } = await _supabase.from('tagihan_pamsimas').insert([{ nama_warga: namaWargaAktif, meteran: nilaiBaru, status_pembayaran: statusKini }]);
+            if (error) {
+                alert("Gagal menambahkan ke Supabase: " + error.message);
+                return;
+            }
+        }
+
+        // Muat ulang data terbaru dari Supabase
+        let { data } = await _supabase.from('tagihan_pamsimas').select('*');
+        if (data) pamsimasCloudData = data;
+
+        alert("Meteran berhasil diperbarui dan disinkronkan ke Supabase!"); 
+        tutupModalBtn(); 
+        tampilkanDataDusun(dusunAktif, rtAktif);
+    }
+
+    function tutupModalBtn() { document.getElementById('pamsimasModal').style.display = 'none'; }
+    function tutupModal(e) { if (e.target.id === 'pamsimasModal') tutupModalBtn(); }
+</script>
+</body>
+</html>

@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Kontrol Master — Manajemen Tagihan Sampah Bulanan</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Pustaka JavaScript Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .admin-container { max-width: 1180px; margin: 40px auto; padding: 0 20px; }
+        .control-box { background: #ffffff; border: 1.5px solid var(--line); border-radius: 18px; padding: 30px; box-shadow: 0 10px 30px -15px rgba(18, 35, 63, 0.08); margin-bottom: 30px; }
+        
+        .sampah-table { width: 100%; border-collapse: collapse; margin-top: 15px; text-align: left; }
+        .sampah-table th { background: var(--navy); color: #fff; padding: 12px 14px; font-size: 13.5px; font-family: var(--font-display); }
+        .sampah-table td { padding: 12px 14px; border-bottom: 1px solid var(--line); font-size: 13.5px; vertical-align: middle; color: var(--ink); }
+        .sampah-table tr:hover { background: #fdfbf7; }
+        
+        .badge-status { padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; border: none; cursor: pointer; transition: all 0.2s; }
+        .st-lunas { background: #e6f4ea; color: #137333; }
+        .st-belum { background: #fce8e6; color: #c5221f; }
+        
+        .dusun-tab { padding: 8px 16px; background: #ffffff; border: 1.5px solid var(--line); border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--navy); transition: all 0.2s; }
+        .dusun-tab.active, .dusun-tab:hover { background: var(--navy); color: #fff; border-color: var(--navy); }
+        
+        .rt-container-admin { display: flex; gap: 8px; flex-wrap: wrap; margin: 15px 0; align-items: center; background: #f8f9fc; padding: 10px 15px; border-radius: 10px; border: 1px solid var(--line); }
+        .rt-label-admin { font-size: 12px; font-weight: 700; color: var(--navy); margin-right: 5px; text-transform: uppercase; }
+        .rt-btn-admin { padding: 5px 12px; background: #ffffff; border: 1.5px solid var(--line); border-radius: 6px; font-size: 12px; font-weight: 600; color: var(--navy); cursor: pointer; transition: all 0.2s; }
+        .rt-btn-admin:hover, .rt-btn-admin.active { background: var(--blue); color: #ffffff; border-color: var(--blue); }
+
+        .month-select { padding: 8px 12px; border: 1.5px solid var(--line); border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--navy); background: #fff; outline: none; cursor: pointer; }
+    </style>
+</head>
+<body style="background-color: #f4f6f9;">
+
+<header>
+    <nav>
+        <a href="index.html" class="logo">
+            <span>MASTER ADMIN<small>Panel Kontrol Desa</small></span>
+        </a>
+        <div class="nav-links" style="display: flex; gap: 15px; align-items: center;">
+            <a href="index.html" style="color: var(--blue); font-weight: 600;">← Kembali ke Beranda</a>
+        </div>
+    </nav>
+</header>
+
+<div class="admin-container">
+    <div class="section-head" style="margin-bottom: 30px;">
+        <div class="eyebrow" style="color: var(--blue); font-weight: 700; letter-spacing: 0.1em; margin-bottom: 6px; text-transform: uppercase; font-size: 12px;">Kontrol Terpusat Supabase</div>
+        <h2 style="font-family: var(--font-display); font-size: 32px; color: var(--navy); margin-bottom: 8px;">Manajemen Tagihan Iuran Sampah Bulanan</h2>
+        <p style="color: #525c73; font-size: 15px;">Kelola tarif iuran bulanan serta pantau status pembayaran sampah warga dari 9 dusun berdasarkan periode bulan.</p>
+    </div>
+
+    <!-- PENGATURAN TARIF IURAN SAMPAH -->
+    <div class="control-box" style="background: #fdfbf7; border: 1.5px dashed var(--gold);">
+        <h3 style="font-family: var(--font-display); font-size: 18px; color: var(--navy); margin-bottom: 12px;">⚙️ Konfigurasi Nominal Iuran Sampah Bulanan</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; align-items: flex-end;">
+            <div>
+                <label style="font-size: 12px; font-weight: 700; color: var(--navy); display: block; margin-bottom: 5px;">Tarif Iuran Per Bulan (Rp)</label>
+                <input type="number" id="inputTarifSampah" value="15000" style="width: 100%; padding: 8px; border: 1px solid var(--line); border-radius: 6px;">
+            </div>
+            <div>
+                <button onclick="simpanTarifSampahAdmin()" style="width: 100%; background: var(--navy); color: #fff; border: none; padding: 9px; border-radius: 6px; font-weight: 700; cursor: pointer;">Simpan Tarif</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABEL MANAJEMEN SAMPAH -->
+    <div class="control-box">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                <h3 id="judulTabelAdmin" style="font-family: var(--font-display); font-size: 18px; color: var(--navy); margin: 0;">Daftar Warga &amp; Iuran Sampah</h3>
+                <!-- Pilihan Bulan -->
+                <select id="pilihBulan" class="month-select" onchange="gantiBulan()">
+                    <option value="Januari">Januari</option>
+                    <option value="Februari">Februari</option>
+                    <option value="Maret">Maret</option>
+                    <option value="April">April</option>
+                    <option value="Mei">Mei</option>
+                    <option value="Juni">Juni</option>
+                    <option value="Juli">Juli</option>
+                    <option value="Agustus">Agustus</option>
+                    <option value="September">September</option>
+                    <option value="Oktober">Oktober</option>
+                    <option value="November">November</option>
+                    <option value="Desember">Desember</option>
+                </select>
+            </div>
+            <input type="text" id="pencarianAdmin" placeholder="Cari nama kepala keluarga..." onkeyup="filterAdminSampah()" style="padding: 8px 12px; border: 1.5px solid var(--line); border-radius: 8px; width: 240px; font-size: 13px; outline: none;">
+        </div>
+
+        <!-- Tombol Tab Dusun -->
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px;" id="containerTabDusun"></div>
+
+        <!-- Tombol Tab RT -->
+        <div class="rt-container-admin" id="containerTabRT">
+            <span class="rt-label-admin">PILIH RT:</span>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table class="sampah-table">
+                <thead>
+                    <tr>
+                        <th>Nama Kepala Keluarga</th>
+                        <th>Dusun / RT</th>
+                        <th>Periode Bulan</th>
+                        <th>Nominal Tagihan</th>
+                        <th style="text-align: center; width: 160px;">Status Pembayaran</th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyAdminSampah">
+                    <tr><td colspan="5" style="text-align: center; color: #525c73; font-style: italic; padding: 30px;">Memuat data warga dari Supabase...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Konfigurasi Supabase Anda
+    const SUPABASE_URL = 'https://ktqtxtjjghvpyrlxclwp.supabase.co';
+    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_RXYccBhx7piFKdpWXxpDgg_5ZM24L-m';
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+    let wargaGlobal = [];
+    let sampahCloudData = [];
+    let dusunTerpilih = 'GANDU';
+    let rtTerpilih = '';
+    let bulanTerpilih = 'Januari';
+    const listDusunAdmin = ['GANDU', 'CARIKAN', 'KLURAK', 'GAMBLOK', 'KEJAWAN', 'PANCAS', 'KEDAWUNG', 'KALIGALANG', 'KARANGREJO'];
+
+    window.addEventListener('DOMContentLoaded', async () => {
+        // Set default bulan aktif ke bulan saat ini
+        const bulanList = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+        const d = new Date();
+        bulanTerpilih = bulanList[d.getMonth()];
+        document.getElementById('pilihBulan').value = bulanTerpilih;
+
+        if(localStorage.getItem('sampah_tarif')) {
+            document.getElementById('inputTarifSampah').value = localStorage.getItem('sampah_tarif');
+        }
+
+        await ambilDataSampahSupabase();
+        await ambilDataPendudukSupabase();
+    });
+
+    async function ambilDataSampahSupabase() {
+        let { data, error } = await _supabase.from('tagihan_sampah').select('*');
+        if (!error && data) {
+            sampahCloudData = data;
+        }
+    }
+
+    async function ambilDataPendudukSupabase() {
+        let { data, error } = await _supabase.from('Penduduk').select('*');
+        if (!error && data) {
+            wargaGlobal = data;
+            inisialisasiTabDusun();
+        } else {
+            console.error("Gagal memuat data penduduk:", error);
+        }
+    }
+
+    function simpanTarifSampahAdmin() {
+        localStorage.setItem('sampah_tarif', document.getElementById('inputTarifSampah').value);
+        alert("Nominal iuran sampah bulanan berhasil disimpan!");
+        renderTabelAdmin();
+    }
+
+    function gantiBulan() {
+        bulanTerpilih = document.getElementById('pilihBulan').value;
+        renderTabelAdmin();
+    }
+
+    function inisialisasiTabDusun() {
+        const container = document.getElementById('containerTabDusun');
+        container.innerHTML = '';
+        listDusunAdmin.forEach((d, idx) => {
+            const btn = document.createElement('button');
+            btn.className = `dusun-tab ${idx === 0 ? 'active' : ''}`;
+            btn.innerText = d;
+            btn.onclick = () => {
+                document.querySelectorAll('.dusun-tab').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                dusunTerpilih = d;
+                document.getElementById('pencarianAdmin').value = '';
+                buatTabRT(dusunTerpilih);
+            };
+            container.appendChild(btn);
+        });
+        buatTabRT(dusunTerpilih);
+    }
+
+    function buatTabRT(dusun) {
+        const rtContainer = document.getElementById('containerTabRT');
+        rtContainer.innerHTML = '<span class="rt-label-admin">PILIH RT:</span>';
+
+        let listRT = new Set();
+        wargaGlobal.forEach(w => {
+            let d = String(w.dusun || '').trim().toUpperCase();
+            if (d === dusun) {
+                let rtVal = String(w.rt || '').trim();
+                if (rtVal && rtVal !== '-') {
+                    let cleanRt = rtVal.replace(/rt/gi, '').trim();
+                    listRT.add(cleanRt);
+                }
+            }
+        });
+
+        let sortedRT = Array.from(listRT).sort((a, b) => a.localeCompare(b, undefined, {numeric: true}));
+        if (sortedRT.length === 0) sortedRT = ['01'];
+        rtTerpilih = sortedRT[0];
+
+        sortedRT.forEach((rt, idx) => {
+            let btnRt = document.createElement('button');
+            btnRt.className = `rt-btn-admin ${idx === 0 ? 'active' : ''}`;
+            btnRt.innerText = 'RT ' + rt.padStart(2, '0');
+            btnRt.onclick = () => {
+                document.querySelectorAll('.rt-btn-admin').forEach(b => b.classList.remove('active'));
+                btnRt.classList.add('active');
+                rtTerpilih = rt;
+                renderTabelAdmin();
+            };
+            rtContainer.appendChild(btnRt);
+        });
+
+        renderTabelAdmin();
+    }
+
+    function renderTabelAdmin() {
+        const tbody = document.getElementById('tbodyAdminSampah');
+        tbody.innerHTML = '';
+        const keyword = document.getElementById('pencarianAdmin').value.toLowerCase();
+        let tarifDefault = parseFloat(localStorage.getItem('sampah_tarif')) || 15000;
+
+        const dataFilter = wargaGlobal.filter(w => {
+            let dsn = String(w.dusun || '').trim().toUpperCase();
+            let rtVal = String(w.rt || '').trim().replace(/rt/gi, '').trim();
+            let nm = String(w.nama || '').toLowerCase();
+
+            let cocokDusun = (dsn === dusunTerpilih);
+            let cocokRt = (rtVal === rtTerpilih);
+            let cocokNama = nm && nm !== '-' && nm.includes(keyword);
+
+            return cocokDusun && cocokRt && cocokNama;
+        });
+
+        document.getElementById('judulTabelAdmin').innerText = `Daftar Warga & Tagihan Sampah - Dusun ${dusunTerpilih} (RT ${rtTerpilih.padStart(2, '0')})`;
+
+        if (dataFilter.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #525c73; font-style: italic; padding: 25px;">Belum ada data warga terdaftar di Dusun ${dusunTerpilih} (RT ${rtTerpilih.padStart(2, '0')}).</td></tr>`;
+            return;
+        }
+
+        dataFilter.forEach(w => {
+            let nama = w.nama || '-';
+            let rtAsli = String(w.rt || '01').trim().replace(/rt/gi, '').trim();
+            let dusun = w.dusun || dusunTerpilih;
+
+            // Cari data di cloud berdasarkan nama warga dan bulan terpilih
+            let foundCloud = sampahCloudData.find(item => item.nama_warga === nama && item.bulan === bulanTerpilih);
+            let statusBayar = foundCloud ? foundCloud.status_pembayaran : 'Belum Lunas';
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${nama}</strong></td>
+                <td>${dusun} (RT ${rtAsli.padStart(2, '0')})</td>
+                <td><span style="font-weight: 600; color: var(--blue);">${bulanTerpilih}</span></td>
+                <td style="font-weight: 700; color: var(--navy);">
+                    Rp ${tarifDefault.toLocaleString('id-ID')}
+                </td>
+                <td style="text-align: center;">
+                    <button class="badge-status ${statusBayar === 'Lunas' ? 'st-lunas' : 'st-belum'}" onclick="toggleStatusSampah('${nama}', this)">
+                        ${statusBayar}
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    async function toggleStatusSampah(nama, btn) {
+        let found = sampahCloudData.find(item => item.nama_warga === nama && item.bulan === bulanTerpilih);
+        let statusKini = found ? found.status_pembayaran : 'Belum Lunas';
+        let statusBaru = statusKini === 'Lunas' ? 'Belum Lunas' : 'Lunas';
+        let tarifDefault = parseFloat(localStorage.getItem('sampah_tarif')) || 15000;
+
+        btn.className = `badge-status ${statusBaru === 'Lunas' ? 'st-lunas' : 'st-belum'}`;
+        btn.innerText = statusBaru;
+
+        if (found) {
+            let { error } = await _supabase.from('tagihan_sampah').update({ status_pembayaran: statusBaru }).eq('id', found.id);
+            if (!error) await ambilDataSampahSupabase();
+        } else {
+            let { error } = await _supabase.from('tagihan_sampah').insert([{ 
+                nama_warga: nama, 
+                bulan: bulanTerpilih, 
+                nominal: tarifDefault, 
+                status_pembayaran: statusBaru 
+            }]);
+            if (!error) await ambilDataSampahSupabase();
+        }
+    }
+
+    function filterAdminSampah() {
+        renderTabelAdmin();
+    }
+</script>
+
+</body>
+</html>

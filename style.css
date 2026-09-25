@@ -1,0 +1,617 @@
+/* ---------- VARIABLES ---------- */
+:root {
+    --navy: #12233f;
+    --navy2: #173257;
+    --blue: #2e5fa3;
+    --gold: #c99a3b;
+    --paper: #f8f6ef;
+    --ink: #1b2333;
+    --line: rgba(18, 35, 63, 0.14);
+    --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'URW Palladio L', P052, serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+}
+
+/* ---------- BASE & RESET ---------- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: var(--font-body);
+    background: var(--paper);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+img, svg {
+    display: block;
+    max-width: 100%;
+}
+
+/* ---------- UTILITIES ---------- */
+.wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 32px;
+}
+
+.eyebrow {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--gold);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.eyebrow::before {
+    content: "";
+    width: 18px;
+    height: 1px;
+    background: var(--gold);
+}
+
+/* ---------- NAV ---------- */
+header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(248, 246, 239, 0.94);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+}
+
+nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 32px;
+    max-width: 1180px;
+    margin: 0 auto;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 19px;
+    color: var(--navy);
+}
+
+/* Pengaturan logo gambar */
+.logo img, .logo-gambar {
+    height: 46px;
+    width: auto;
+    object-fit: contain;
+    border-radius: 6px;
+}
+
+.logo small {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--blue);
+    text-transform: none;
+}
+
+.nav-links {
+    display: flex;
+    gap: 32px;
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--navy);
+}
+
+/* --- EFEK KLIK & GARIS BAWAH --- */
+.nav-links a {
+    opacity: 0.72;
+    transition: all 0.2s ease;
+    display: inline-block;
+    padding-bottom: 3px;
+    border-bottom: 2px solid transparent;
+}
+
+.nav-links a:hover {
+    opacity: 1;
+    color: var(--gold);
+}
+
+.nav-links a:active {
+    transform: scale(0.92);
+    opacity: 0.8;
+}
+
+.nav-links a.active {
+    opacity: 1;
+    border-bottom: 2px solid var(--gold);
+    color: var(--navy);
+}
+
+/* ------------------------------- */
+
+.btn {
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 13.5px;
+    padding: 11px 20px;
+    border-radius: 9px;
+    border: none;
+    cursor: pointer;
+    transition: transform .18s ease, box-shadow .18s ease;
+}
+
+.btn-gold {
+    background: var(--gold);
+    color: #2a2005;
+    box-shadow: 0 6px 16px -6px rgba(201, 154, 59, 0.6);
+}
+
+.btn-gold:hover {
+    transform: translateY(-2px);
+}
+
+.menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+/* ---------- HERO ---------- */
+.hero {
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-media {
+    position: relative;
+    height: 74vh;
+    min-height: 480px;
+    
+    /* GANTI BAGIAN INI DENGAN NAMA FILE FOTO ANDA */
+    background-image: url('foto-desa.jpg'); 
+    
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+/* --- KODE TAMBAHAN UNTUK MEMPERBAIKI TEKS --- */
+.hero-content h1, 
+.hero-content p {
+    color: #ffffff; /* Memaksa teks menjadi putih bersih */
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8); /* Memberikan bayangan hitam pada teks */
+}
+
+.hero-content .eyebrow {
+    color: #fbe3ad; /* Warna kuning emas terang agar kontras */
+}
+/* ------------------------------------------- */
+
+.hero h1 {
+    font-size: clamp(38px, 5.4vw, 62px);
+    line-height: 1.05;
+    margin: 16px 0 18px;
+    max-width: 680px;
+}
+
+.hero p {
+    font-size: 16px;
+    max-width: 520px;
+    line-height: 1.65;
+    opacity: 1; /* Diubah menjadi 1 agar tidak pudar */
+    margin-bottom: 28px;
+}
+
+/* ---------- SECTION SHARED ---------- */
+.section {
+    padding: 88px 0;
+}
+
+.section-head {
+    max-width: 640px;
+    margin-bottom: 44px;
+}
+
+.section-head h2 {
+    font-size: clamp(26px, 3.4vw, 36px);
+    margin-top: 14px;
+    line-height: 1.12;
+}
+
+.section-head p {
+    margin-top: 14px;
+    color: #4b5670;
+    font-size: 15.5px;
+    line-height: 1.6;
+}
+
+/* ---------- DUSUN GRID ---------- */
+.dusun-section {
+    background: #fff;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+}
+
+.dusun-grid {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 10px;
+}
+
+.dusun-chip {
+    border: 1.5px solid var(--line);
+    border-radius: 12px;
+    padding: 16px 10px;
+    text-align: center;
+    transition: border-color .18s, transform .18s;
+}
+
+.dusun-chip:hover {
+    border-color: var(--blue);
+    transform: translateY(-3px);
+}
+
+.dusun-chip .d-num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--gold);
+    letter-spacing: 0.06em;
+}
+
+.dusun-chip .d-name {
+    font-weight: 700;
+    font-size: 13.5px;
+    margin-top: 6px;
+    color: var(--navy);
+}
+
+.dusun-note {
+    margin-top: 20px;
+    font-size: 13px;
+    color: #7a8398;
+    font-family: var(--font-mono);
+}
+
+/* ---------- DATA CARDS ---------- */
+.data-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.data-card {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 28px 26px;
+    display: flex;
+    flex-direction: column;
+    transition: box-shadow .2s, transform .2s;
+}
+
+.data-card:hover {
+    box-shadow: 0 20px 40px -24px rgba(18, 35, 63, 0.35);
+    transform: translateY(-3px);
+}
+
+.data-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 11px;
+    background: var(--navy);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 18px;
+}
+
+.data-icon svg {
+    width: 21px;
+    height: 21px;
+    stroke: var(--gold);
+}
+
+.data-card h3 {
+    font-size: 17.5px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--navy);
+}
+
+.data-card p {
+    font-size: 13.8px;
+    color: #525c73;
+    line-height: 1.6;
+    margin-bottom: 16px;
+    flex-grow: 1;
+}
+
+.chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 18px;
+}
+
+.chip {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 5px 10px;
+    border-radius: 100px;
+    background: #eef2f7;
+    color: var(--blue);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+.data-link {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--blue);
+    margin-top: auto;
+}
+
+.data-link svg {
+    width: 14px;
+    height: 14px;
+    stroke: var(--blue);
+    transition: transform .18s;
+}
+
+.data-card:hover .data-link svg {
+    transform: translateX(3px);
+}
+
+/* ---------- STATS BAND ---------- */
+.stats-band {
+    background: var(--navy);
+    color: var(--paper);
+}
+
+.stats-band .section-head p {
+    color: #b7c3d9;
+}
+
+.stats-row {
+    display: flex;
+    gap: 0;
+    border-top: 1px solid rgba(248, 246, 239, 0.14);
+}
+
+.stat-box {
+    flex: 1;
+    padding: 28px 24px;
+    border-right: 1px solid rgba(248, 246, 239, 0.14);
+}
+
+.stat-box:last-child {
+    border-right: none;
+}
+
+.stat-box b {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 32px;
+    color: var(--gold);
+}
+
+.stat-box span {
+    font-size: 12.5px;
+    color: #aebbd3;
+    font-weight: 600;
+}
+
+/* ---------- FOOTER ---------- */
+footer {
+    padding: 60px 0 36px;
+    background: #fff;
+    border-top: 1px solid var(--line);
+}
+
+.footer-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr;
+    gap: 40px;
+    padding-bottom: 36px;
+}
+
+.footer-grid h4 {
+    font-size: 12.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--navy);
+    margin-bottom: 14px;
+    font-family: var(--font-mono);
+}
+
+.footer-grid ul {
+    list-style: none;
+}
+
+.footer-grid li {
+    margin-bottom: 9px;
+    font-size: 14px;
+    color: #525c73;
+}
+
+.footer-grid li a:hover {
+    color: var(--blue);
+}
+
+.footer-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 22px;
+    border-top: 1px solid var(--line);
+    font-size: 12.5px;
+    color: #8790a3;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+/* ---------- MEDIA QUERIES ---------- */
+@media (max-width: 920px) {
+    .nav-links {
+        display: none;
+    }
+    .menu-toggle {
+        display: block;
+    }
+    .dusun-grid {
+        grid-template-columns: repeat(5, 1fr);
+    }
+    .data-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    .stats-row {
+        flex-wrap: wrap;
+    }
+    .stat-box {
+        flex: 1 1 50%;
+        border-bottom: 1px solid rgba(248, 246, 239, 0.14);
+    }
+    .footer-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .dusun-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    .data-grid {
+        grid-template-columns: 1fr;
+    }
+    .footer-grid {
+        grid-template-columns: 1fr;
+    }
+    .wrap {
+        padding: 0 20px;
+    }
+    .stat-box {
+        flex: 1 1 100%;
+    }
+}
+/* Mengunci ukuran gambar logo agar tidak membesar */
+.logo img {
+    height: 46px; /* Tinggi logo, mirip dengan ukuran aslinya */
+    width: auto;  /* Lebar menyesuaikan agar tidak gepeng */
+    object-fit: contain;
+    border-radius: 6px; /* Memberikan sedikit efek lengkung di sudutnya */
+}
+/* --- PENYESUAIAN POSISI DAN WARNA ESTETIK HERO --- */
+
+/* 1. Mengatur posisi kotak teks agar ada ruang lega di bawah */
+.hero-media {
+    justify-content: flex-start !important; /* Mengubah posisi dari bawah ke atas/tengah */
+    padding-top: 80px; /* Memberikan jarak dari navigasi atas */
+}
+
+.hero-content {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 32px;
+    text-align: left; /* Teks rata kiri agar lebih rapi dan estetik */
+}
+
+/* --- PERBAIKAN LAPISAN LATAR BELAKANG (SCRIM) --- */
+.hero-media .scrim {
+    position: absolute;
+    inset: 0;
+    /* Membuat latar belakang lebih transparan dan pas agar foto desa terlihat jelas */
+    background: linear-gradient(135deg, rgba(11, 20, 37, 0.45) 0%, rgba(11, 20, 37, 0.2) 100%);
+    backdrop-filter: none; /* Efek blur dihapus agar foto tidak buram */
+}
+
+/* Memastikan warna teks tetap terang dan tajam */
+.hero-content h1 {
+    color: #ffffff !important;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+}
+
+.hero-content p {
+    color: #f0f4f8 !important;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
+}
+
+/* 3. Warna Estetik Judul Utama (Putih Gading / Off-White) */
+.hero-content h1 {
+    color: #fbf9f1 !important; /* Putih gading yang lembut di mata */
+    font-size: clamp(32px, 4.5vw, 54px);
+    line-height: 1.15;
+    margin: 14px 0 16px;
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* 4. Warna Estetik Sub-teks (Abu-abu terang kebiruan yang elegan) */
+.hero-content p {
+    color: #d1dcf0 !important; /* Warna abu-abu terang bernuansa sejuk */
+    font-size: 15.5px;
+    max-width: 600px;
+    line-height: 1.6;
+    margin-bottom: 24px;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    opacity: 1 !important;
+}
+
+/* 5. Label Atas (Kuning Emas Premium) */
+.hero-content .eyebrow {
+    color: #ffd782 !important; /* Emas cerah yang mewah */
+    letter-spacing: 0.18em;
+    font-weight: 600;
+}
+/* --- MEMPERJELAS TEKS KECIL (EYEBROW) --- */
+.hero-content .eyebrow {
+    color: #ffde9c !important; /* Mengubah warna kuning menjadi lebih cerah dan bersinar */
+    font-weight: 700 !important; /* Menebalkan huruf agar lebih tegas */
+    text-shadow: 0 5px 10px rgba(0, 0, 0, 0.9); /* Menambahkan bayangan hitam tebal di belakang huruf */
+}
+
+/* Memperpanjang garis kecil di sebelah kiri tulisan */
+.hero-content .eyebrow::before {
+    background: #ffde9c !important;
+    width: 24px;
+    height: 2px;
+}
+
+/* Membuat daftar menu footer menjadi 2 kolom (jajar) */
+.footer-links-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px 20px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
