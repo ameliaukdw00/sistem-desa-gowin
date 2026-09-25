@@ -717,3 +717,14 @@ footer {
         display: flex;
     }
 }
+/* Sembunyikan tombol kotak di layar besar (Laptop) */
+.tombol-kembali-hp {
+    display: none;
+}
+
+/* Munculkan tombol kotak hanya di layar kecil (HP) */
+@media (max-width: 768px) {
+    .tombol-kembali-hp {
+        display: block;
+    }
+}
