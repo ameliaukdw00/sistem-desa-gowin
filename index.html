@@ -187,8 +187,27 @@
         document.getElementById('mapOverlay').style.display = 'none'; 
     }
 
-    function pilihDusun(namaDusun) { 
-        window.location.href = `penduduk.html?dusun=${encodeURIComponent(namaDusun)}`; 
+   function pilihDusun(namaDusun) { 
+        // 1. Buka kunci layar peta
+        bukaPeta();
+
+        // 2. Gulir layar otomatis ke arah peta agar warga bisa melihatnya
+        document.getElementById('rekapitulasi').scrollIntoView({ behavior: 'smooth' });
+
+        // 3. Ubah titik peta ke dusun spesifik (Google Maps akan mencari otomatis)
+        let pencarian = `Dusun ${namaDusun}, Gondang Winangun, Ngadirejo, Temanggung`;
+        document.getElementById('desakuMap').src = `https://maps.google.com/maps?q=${encodeURIComponent(pencarian)}&t=k&z=16&output=embed`;
+        
+        // 4. Ubah judul di atas peta
+        document.getElementById('mapTitle').innerHTML = `<span style="font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--navy); letter-spacing: 0.02em;">📍 Lokasi: Dusun ${namaDusun}</span>`;
+
+        // 5. Beri jeda 1,5 detik, lalu tanya apakah ingin lanjut membuka data
+        setTimeout(() => {
+            let lanjutData = confirm(`Titik koordinat Dusun ${namaDusun} sedang ditampilkan di peta.\n\nApakah Anda ingin lanjut membuka halaman Data Penduduk untuk dusun ini?`);
+            if (lanjutData) {
+                window.location.href = `penduduk.html?dusun=${encodeURIComponent(namaDusun)}`; 
+            }
+        }, 1500);
     }
 </script>
 
