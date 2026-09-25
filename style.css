@@ -615,3 +615,51 @@ footer {
     padding: 0;
     margin: 0;
 }
+
+/* --- PENGATURAN MENU RESPONSIVE (HP) --- */
+
+/* Sembunyikan tombol hamburger di layar besar (Laptop/PC) */
+.hamburger-btn {
+    display: none;
+    font-size: 24px;
+    background: none;
+    border: none;
+    color: var(--navy);
+    cursor: pointer;
+}
+
+/* Pengaturan khusus untuk layar HP (lebar maksimal 768px) */
+@media (max-width: 768px) {
+    /* Munculkan tombol hamburger */
+    .hamburger-btn {
+        display: block;
+    }
+
+    /* Ubah daftar menu menjadi dropdown tersembunyi */
+    .nav-links {
+        display: none; /* Disembunyikan secara default */
+        flex-direction: column;
+        position: absolute;
+        top: 70px; /* Jarak dari atas header */
+        left: 0;
+        width: 100%;
+        background-color: #ffffff;
+        box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+        padding: 20px 0;
+        text-align: center;
+        z-index: 999;
+    }
+
+    /* Jarak antar teks menu saat di HP */
+    .nav-links a {
+        padding: 12px 20px;
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Class tambahan untuk memunculkan menu saat tombol diklik */
+    .nav-links.tampil-menu {
+        display: flex;
+    }
+}

@@ -24,21 +24,22 @@
 
 <header>
     <nav>
-        <a href="#" class="logo">
-            <img src="logo-ngadirejo.jpg" alt="Logo Desa" class="logo-desa">
+        <!-- Logo -->
+        <a href="index.html" class="logo">
+            <img src="logo-ngadirejo.jpg" alt="Logo Desa" class="logo-gambar">
             <span>GOWIN<small>Data &amp; Profil Desa</small></span>
         </a>
-        <div class="nav-links">
-            <a href="#beranda" class="active">Beranda</a>
-            <a href="#dusun">Rekapitulasi Desa</a>
+
+        <!-- Tombol Hamburger (Hanya muncul di HP) -->
+        <button class="hamburger-btn" id="hamburgerBtn">☰</button>
+
+        <!-- Daftar Menu -->
+        <div class="nav-links" id="navMenu">
+            <a href="index.html">Beranda</a>
+            <a href="#rekapitulasi">Rekapitulasi Desa</a>
             <a href="#data">Data Desa</a>
-            <a href="profil.html">Profil Desa</a>
-            <a href="admin.html" style="color: var(--gold);">Admin</a>
-        </div>
-        <div class="nav-right" style="display:flex;align-items:center;gap:14px;">
-            <button class="menu-toggle" aria-label="Buka menu">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M3 12h18M3 18h18" stroke="#12233f" stroke-width="2" stroke-linecap="round"/></svg>
-            </button>
+            <a href="#profil">Profil Desa</a>
+            <a href="admin.html" style="color: var(--gold); font-weight: 700;">Admin</a>
         </div>
     </nav>
 </header>
@@ -181,5 +182,16 @@
         window.location.href = `penduduk.html?dusun=${encodeURIComponent(namaDusun)}`; 
     }
 </script>
+
+<script>
+    // Fungsi untuk membuka/menutup menu di HP
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const navMenu = document.getElementById('navMenu');
+
+    hamburgerBtn.addEventListener('click', () => {
+        navMenu.classList.toggle('tampil-menu');
+    });
+</script>
+
 </body>
 </html>
