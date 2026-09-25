@@ -39,34 +39,26 @@
             <div class="eyebrow">KECAMATAN NGADIREJO, TEMANGGUNG</div>
             <h1>Data Penduduk Desa Gondang Winangun</h1>
             <p>Satu pintu untuk data kependudukan, sosial, dan bantuan warga Desa Gondang Winangun — terbuka, mudah diakses, dan diperbarui dari sembilan dusun.</p>
-<!-- GANTI MENJADI KODE INI: -->
-<div class="hero-actions" style="margin-top: 30px;">
-        <a href="#rekapitulasi" style="display: inline-block; background-color: #ffffff; color: var(--navy); padding: 14px 32px; border-radius: 50px; font-weight: 700; text-decoration: none; font-size: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.2); transition: transform 0.2s;">
-            Mulai Jelajahi Data Desa &darr;
-        </a>
-    </div>
+            <div class="hero-actions" style="margin-top: 30px;">
+                <a href="#rekapitulasi" style="display: inline-block; background-color: #ffffff; color: var(--navy); padding: 14px 32px; border-radius: 50px; font-weight: 700; text-decoration: none; font-size: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.2); transition: transform 0.2s;">
+                    Mulai Jelajahi Data Desa &darr;
+                </a>
+            </div>
         </div>
     </div>
 </section>
 
-<!-- ID="dusun" tetap ada, tapi kita tambahkan ID="rekapitulasi" di dalamnya -->
+<!-- ID rekapitulasi -->
 <section class="section dusun-section" id="dusun">
-    <div class="wrap" id="rekapitulasi"> <!-- ID rekapitulasi DITAMBAHKAN DI SINI -->
+    <div class="wrap" id="rekapitulasi"> 
         <div class="section-head">
             <div class="eyebrow">WILAYAH & DATA KEPENDUDUKAN WARGA</div>
-            <h2>Peta Geospasial & Data Dusun</h2>
-            <p>Jelajahi sebaran wilayah 9 dusun serta akses lengkap data kependudukan, kemiskinan, pendidikan, hingga bantuan sosial warga.</p>
+            <h2>Peta Lokasi & Data Dusun</h2>
+            <p>Pilih salah satu dari 9 dusun di bawah ini untuk melihat data lengkap kependudukan warga.</p>
 
-            <div class="map-container-wrapper">
-                <div id="mapOverlay" class="map-overlay-banner" onclick="bukaPeta()">
-                    <h4>🗺️ Peta Interaktif Desa</h4>
-                    <p>Sentuh tombol di bawah untuk mulai menggeser atau melihat titik peta</p>
-                    <button class="btn-aktifkan">Sentuh untuk Mengaktifkan Peta</button>
-                </div>
-                <div id="mapTitle" style="position: absolute; top: 16px; left: 50%; transform: translateX(-50%); z-index: 5; background: rgba(255, 255, 255, 0.92); padding: 8px 24px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.15); box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; pointer-events: none;">
-                    <span style="font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--navy); letter-spacing: 0.02em;">Geospasial Desa Gondang Winangun</span>
-                </div>
-                <iframe id="desakuMap" src="https://maps.google.com/maps?q=Gondangwinangun,+Ngadirejo,+Temanggung&t=k&z=14&output=embed" width="100%" height="480" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            <div class="map-container-wrapper" style="margin-bottom: 40px;">
+                <!-- Peta Google Maps Standar -->
+                <iframe id="desakuMap" src="https://maps.google.com/maps?q=Gondangwinangun,+Ngadirejo,+Temanggung&t=k&z=15&output=embed" width="100%" height="480" style="border:0; border-radius: 8px;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
             </div>
         </div>
 
@@ -81,15 +73,15 @@
             <div class="dusun-chip" onclick="pilihDusun('Kaligalang')" style="cursor:pointer;"><div class="d-num">08</div><div class="d-name">Kaligalang</div></div>
             <div class="dusun-chip" onclick="pilihDusun('Karangrejo')" style="cursor:pointer;"><div class="d-num">09</div><div class="d-name">Karangrejo</div></div>
         </div>
-        <div class="dusun-note">// Klik salah satu dusun di atas untuk melihat titik wilayah pada peta sekaligus membuka data kependudukannya</div>
+        <div class="dusun-note">// Klik salah satu dusun di atas untuk membuka data kependudukannya</div>
     </div>
 </section>
 
-<!-- ID data SUDAH ADA dari awal, jadi ini sudah aman -->
+<!-- Kategori Data Warga -->
 <section class="section" id="data">
     <div class="wrap">
         <div class="section-head">
-            <div class="eyebrow">REAKAPITULASI KEPENDUDUKAN</div>
+            <div class="eyebrow">REKAPITULASI KEPENDUDUKAN</div>
             <h2>Kategori Data Warga</h2>
         </div>
         <div class="data-grid">
@@ -156,6 +148,19 @@
     </div>
 </footer>
 
+<!-- SCRIPT FUNGSI KLIK DUSUN (VERSI SEDERHANA & AMAN) -->
+<script>
+    function pilihDusun(namaDusun) { 
+        // 1. Gulir layar ke bawah dengan mulus
+        document.getElementById('rekapitulasi').scrollIntoView({ behavior: 'smooth' });
+        
+        // 2. Langsung pindah ke halaman data dusun setelah 0.3 detik
+        setTimeout(() => {
+            window.location.href = `penduduk.html?dusun=${encodeURIComponent(namaDusun)}`; 
+        }, 300);
+    }
+</script>
+
 <script>
     // Konfigurasi Koneksi Supabase
     const SUPABASE_URL = 'https://ktqtxtjjghvpyrlxclwp.supabase.co';
@@ -170,8 +175,6 @@
             navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
         });
     }
-
-  
 </script>
 
 <script>
