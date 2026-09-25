@@ -184,12 +184,23 @@
 </script>
 
 <script>
-    // Fungsi untuk membuka/menutup menu di HP
+    // Menangkap elemen tombol dan menu
     const hamburgerBtn = document.getElementById('hamburgerBtn');
     const navMenu = document.getElementById('navMenu');
+    
+    // Mengambil semua tautan (link) di dalam menu
+    const navLinksAll = navMenu.querySelectorAll('a');
 
+    // Fungsi untuk membuka/menutup menu saat tombol ☰ diklik
     hamburgerBtn.addEventListener('click', () => {
         navMenu.classList.toggle('tampil-menu');
+    });
+
+    // Fungsi BARU: Menutup menu otomatis saat salah satu tautan diklik
+    navLinksAll.forEach(link => {
+        link.addEventListener('click', () => {
+            navMenu.classList.remove('tampil-menu');
+        });
     });
 </script>
 
