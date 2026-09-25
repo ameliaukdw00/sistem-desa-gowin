@@ -48,18 +48,13 @@
     </div>
 </section>
 
-<!-- ID rekapitulasi -->
+<!-- BAGIAN DUSUN (PETA SUDAH DIHAPUS TOTAL) -->
 <section class="section dusun-section" id="dusun">
     <div class="wrap" id="rekapitulasi"> 
-        <div class="section-head">
+        <div class="section-head" style="margin-bottom: 35px;">
             <div class="eyebrow">WILAYAH & DATA KEPENDUDUKAN WARGA</div>
-            <h2>Peta Lokasi & Data Dusun</h2>
-            <p>Pilih salah satu dari 9 dusun di bawah ini untuk melihat data lengkap kependudukan warga.</p>
-
-            <div class="map-container-wrapper" style="margin-bottom: 40px;">
-                <!-- Peta Google Maps Standar -->
-                <iframe id="desakuMap" src="https://maps.google.com/maps?q=Gondangwinangun,+Ngadirejo,+Temanggung&t=k&z=15&output=embed" width="100%" height="480" style="border:0; border-radius: 8px;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-            </div>
+            <h2>Data Penduduk per Dusun</h2>
+            <p>Pilih salah satu dari 9 dusun di bawah ini untuk melihat data lengkap kependudukan, kemiskinan, pendidikan, hingga bantuan sosial warga.</p>
         </div>
 
         <div class="dusun-grid">
@@ -73,7 +68,7 @@
             <div class="dusun-chip" onclick="pilihDusun('Kaligalang')" style="cursor:pointer;"><div class="d-num">08</div><div class="d-name">Kaligalang</div></div>
             <div class="dusun-chip" onclick="pilihDusun('Karangrejo')" style="cursor:pointer;"><div class="d-num">09</div><div class="d-name">Karangrejo</div></div>
         </div>
-        <div class="dusun-note">// Klik salah satu dusun di atas untuk membuka data kependudukannya</div>
+        <div class="dusun-note" style="margin-top: 20px;">// Klik salah satu dusun di atas untuk membuka data kependudukannya</div>
     </div>
 </section>
 
@@ -148,16 +143,9 @@
     </div>
 </footer>
 
-<!-- SCRIPT FUNGSI KLIK DUSUN (VERSI SEDERHANA & AMAN) -->
 <script>
     function pilihDusun(namaDusun) { 
-        // 1. Gulir layar ke bawah dengan mulus
-        document.getElementById('rekapitulasi').scrollIntoView({ behavior: 'smooth' });
-        
-        // 2. Langsung pindah ke halaman data dusun setelah 0.3 detik
-        setTimeout(() => {
-            window.location.href = `penduduk.html?dusun=${encodeURIComponent(namaDusun)}`; 
-        }, 300);
+        window.location.href = `penduduk.html?dusun=${encodeURIComponent(namaDusun)}`; 
     }
 </script>
 
