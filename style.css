@@ -728,3 +728,15 @@ footer {
         display: block;
     }
 }
+/* --- PENGATURAN TOMBOL KEMBALI DI HP --- */
+/* Secara default (di laptop), sembunyikan tombol kotaknya */
+.tombol-kembali-hp {
+    display: none !important;
+}
+
+/* Saat layar kecil (HP - maksimal 768px), munculkan tombol kotaknya */
+@media (max-width: 768px) {
+    .tombol-kembali-hp {
+        display: block !important;
+    }
+}
