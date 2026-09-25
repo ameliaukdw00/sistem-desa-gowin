@@ -59,8 +59,9 @@
     </div>
 </section>
 
+<!-- ID="dusun" tetap ada, tapi kita tambahkan ID="rekapitulasi" di dalamnya -->
 <section class="section dusun-section" id="dusun">
-    <div class="wrap">
+    <div class="wrap" id="rekapitulasi"> <!-- ID rekapitulasi DITAMBAHKAN DI SINI -->
         <div class="section-head">
             <div class="eyebrow">WILAYAH & STATISTIK WARGA</div>
             <h2>Peta Geospasial & Rekapitulasi Data Dusun</h2>
@@ -94,6 +95,7 @@
     </div>
 </section>
 
+<!-- ID data SUDAH ADA dari awal, jadi ini sudah aman -->
 <section class="section" id="data">
     <div class="wrap">
         <div class="section-head">
@@ -122,7 +124,18 @@
     </div>
 </section>
 
-<footer style="margin-top: 60px; background-color: var(--navy); color: #ffffff; padding: 50px 0 20px 0; border-top: 4px solid var(--gold);">
+<!-- BAGIAN PROFIL DESA (DITAMBAHKAN KARENA SEBELUMNYA BELUM ADA) -->
+<section class="section" id="profil" style="background-color: #ffffff; padding: 60px 0;">
+    <div class="wrap">
+        <div class="section-head">
+            <div class="eyebrow">PROFIL DESA</div>
+            <h2>Tentang Gondang Winangun</h2>
+            <p style="color: #525c73; line-height: 1.8; max-width: 800px;">Desa Gondang Winangun merupakan salah satu desa yang terletak di wilayah Kecamatan Ngadirejo, Kabupaten Temanggung. Kami berkomitmen untuk mewujudkan tata kelola desa yang transparan, inovatif, dan terdigitalisasi guna memudahkan pelayanan bagi seluruh warga.</p>
+        </div>
+    </div>
+</section>
+
+<footer style="margin-top: 0px; background-color: var(--navy); color: #ffffff; padding: 50px 0 20px 0; border-top: 4px solid var(--gold);">
     <div class="wrap" style="max-width: 1180px; margin: 0 auto; padding: 0 20px;">
         <div class="footer-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 40px; margin-bottom: 40px;">
             <div>
@@ -169,10 +182,14 @@
     const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_RXYccBhx7piFKdpWXxpDgg_5ZM24L-m';
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
-    document.querySelector('.menu-toggle').addEventListener('click', () => {
-        const navLinks = document.querySelector('.nav-links');
-        navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
-    });
+    // Mencegah error Javascript jika elemen menu-toggle tidak ada di HTML
+    const toggleBtnLama = document.querySelector('.menu-toggle');
+    if (toggleBtnLama) {
+        toggleBtnLama.addEventListener('click', () => {
+            const navLinks = document.querySelector('.nav-links');
+            navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
+        });
+    }
 
     function bukaPeta() { 
         document.getElementById('mapOverlay').style.display = 'none'; 
@@ -192,16 +209,20 @@
     const navLinksAll = navMenu.querySelectorAll('a');
 
     // Fungsi untuk membuka/menutup menu saat tombol ☰ diklik
-    hamburgerBtn.addEventListener('click', () => {
-        navMenu.classList.toggle('tampil-menu');
-    });
-
-    // Fungsi BARU: Menutup menu otomatis saat salah satu tautan diklik
-    navLinksAll.forEach(link => {
-        link.addEventListener('click', () => {
-            navMenu.classList.remove('tampil-menu');
+    if (hamburgerBtn) {
+        hamburgerBtn.addEventListener('click', () => {
+            navMenu.classList.toggle('tampil-menu');
         });
-    });
+    }
+
+    // Fungsi: Menutup menu otomatis saat salah satu tautan diklik
+    if (navLinksAll) {
+        navLinksAll.forEach(link => {
+            link.addEventListener('click', () => {
+                navMenu.classList.remove('tampil-menu');
+            });
+        });
+    }
 </script>
 
 </body>
