@@ -663,3 +663,57 @@ footer {
         display: flex;
     }
 }
+
+/* =========================================
+   PENGATURAN MENU UNTUK LAPTOP (DEFAULT) 
+   ========================================= */
+.nav-links {
+    display: flex; /* Memunculkan menu berjejer ke samping */
+    align-items: center;
+    gap: 30px; /* Jarak antar teks menu di laptop */
+}
+
+.hamburger-btn {
+    display: none; /* Sembunyikan tombol garis tiga di laptop */
+    font-size: 26px;
+    background: none;
+    border: none;
+    color: var(--navy);
+    cursor: pointer;
+}
+
+/* =========================================
+   PENGATURAN MENU KHUSUS UNTUK HP
+   ========================================= */
+@media (max-width: 768px) {
+    .hamburger-btn {
+        display: block; /* Munculkan tombol garis tiga di HP */
+    }
+
+    .nav-links {
+        display: none; /* Sembunyikan menu mendatar di HP */
+        flex-direction: column;
+        position: absolute;
+        top: 70px;
+        left: 0;
+        width: 100%;
+        background-color: #ffffff;
+        box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+        padding: 10px 0;
+        text-align: center;
+        z-index: 999;
+    }
+
+    /* Mengatur jarak tautan saat di HP */
+    .nav-links a {
+        padding: 15px 20px;
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Class ini dipicu oleh JavaScript saat tombol ☰ diklik */
+    .nav-links.tampil-menu {
+        display: flex;
+    }
+}
